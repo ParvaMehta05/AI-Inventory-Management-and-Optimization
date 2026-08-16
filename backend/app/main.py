@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from fastapi import Depends
+from app.core.security import get_current_user
+
 from app.database.database import Base, engine
 from app.models.user import User
 from app.routes.auth import router as auth_router
@@ -25,4 +28,15 @@ def root():
 def health():
     return {
         "status": "healthy"
+    }
+
+@app.get("/me")
+def get_me(
+    current_user: User = Depends(get_current_user)
+):
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "is_active": current_user.is_active
     }
