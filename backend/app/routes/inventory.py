@@ -1,0 +1,133 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.database.database import get_db
+from app.models.inventory import Inventory
+from app.models.product import Product
+from app.models.warehouse import Warehouse
+from app.schemas.inventory import InventoryCreate, InventoryResponse
+
+
+router = APIRouter(
+    prefix="/inventory",
+    tags=["Inventory"]
+)
+
+
+@router.post(
+    "/",
+    response_model=InventoryResponse
+)
+def create_inventory(
+    inventory: InventoryCreate,
+    db: Session = Depends(get_db)
+):
+    product = db.query(Product).filter(
+        Product.id == inventory.product_id
+    ).first()
+
+    if product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    warehouse = db.query(Warehouse).filter(
+        Warehouse.id == inventory.warehouse_id
+    ).first()
+
+    if warehouse is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Warehouse not found"
+        )
+    existing_inventory = db.query(Inventory).filter(
+    Inventory.product_id == inventory.product_id,
+    Inventory.warehouse_id == inventory.warehouse_id
+    ).first()
+
+    if existing_inventory is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Inventory for this product and warehouse already exists"
+        )
+
+    new_inventory = Inventory(
+        product_id=inventory.product_id,
+        warehouse_id=inventory.warehouse_id,
+        quantity=inventory.quantity
+    )
+
+    db.add(new_inventory)
+    db.commit()
+    db.refresh(new_inventory)
+
+    return new_inventory
+
+
+@router.get(
+    "/",
+    response_model=list[InventoryResponse]
+)
+def get_inventory(
+    db: Session = Depends(get_db)
+):
+    inventory = db.query(Inventory).all()
+
+    return inventory
+
+@router.put(
+    "/{inventory_id}",
+    response_model=InventoryResponse
+)
+def update_inventory(
+    inventory_id: int,
+    quantity: int,
+    db: Session = Depends(get_db)
+):
+    inventory = db.query(Inventory).filter(
+        Inventory.id == inventory_id
+    ).first()
+
+    if inventory is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Inventory not found"
+        )
+
+    if quantity < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Quantity cannot be negative"
+        )
+
+    inventory.quantity = quantity
+
+    db.commit()
+    db.refresh(inventory)
+
+    return inventory
+@router.delete(
+    "/{inventory_id}"
+)
+
+def delete_inventory(
+    inventory_id: int,
+    db: Session = Depends(get_db)
+):
+    inventory = db.query(Inventory).filter(
+        Inventory.id == inventory_id
+    ).first()
+
+    if inventory is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Inventory not found"
+        )
+
+    db.delete(inventory)
+    db.commit()
+
+    return {
+        "message": "Inventory deleted successfully"
+    }
