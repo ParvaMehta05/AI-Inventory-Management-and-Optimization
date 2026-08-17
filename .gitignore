@@ -1,1 +1,6 @@
 .env
+<<<<<<< HEAD
+=======
+__pycache__/
+*.pyc
+>>>>>>> 18788c2cb31a7b0efce9c31f3a27704248a375ba
