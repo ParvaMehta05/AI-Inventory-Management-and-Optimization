@@ -14,6 +14,10 @@ function App() {
   const [apiError, setApiError] = useState("");
 
   const [showProductForm, setShowProductForm] = useState(false);
+  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
+
   const [activeSection, setActiveSection] = useState("Dashboard");
 
   const [formData, setFormData] = useState({
@@ -21,6 +25,23 @@ function App() {
     sku: "",
     category: "",
     price: "",
+  });
+
+  const [warehouseFormData, setWarehouseFormData] = useState({
+    name: "",
+    location: "",
+  });
+
+  const [inventoryFormData, setInventoryFormData] = useState({
+    product_id: "",
+    warehouse_id: "",
+    quantity: "",
+  });
+
+  const [orderFormData, setOrderFormData] = useState({
+    product_id: "",
+    warehouse_id: "",
+    quantity: "",
   });
 
   const [formMessage, setFormMessage] = useState("");
@@ -128,6 +149,55 @@ function App() {
     }));
   };
 
+  const handleWarehouseInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setWarehouseFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleInventoryInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setInventoryFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleOrderInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setOrderFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const getApiErrorMessage = async (response, defaultMessage) => {
+    let errorMessage = defaultMessage;
+
+    try {
+      const errorData = await response.json();
+
+      if (Array.isArray(errorData.detail)) {
+        errorMessage = errorData.detail
+          .map((item) => item.msg)
+          .join(", ");
+      } else if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      // Keep default error message.
+    }
+
+    return errorMessage;
+  };
+
+  // ---------------- PRODUCT ----------------
+
   const handleAddProduct = async (event) => {
     event.preventDefault();
 
@@ -164,23 +234,9 @@ function App() {
       });
 
       if (!response.ok) {
-        let errorMessage = "Unable to add product.";
-
-        try {
-          const errorData = await response.json();
-
-          if (Array.isArray(errorData.detail)) {
-            errorMessage = errorData.detail
-              .map((item) => item.msg)
-              .join(", ");
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          }
-        } catch {
-          // Keep default error message.
-        }
-
-        throw new Error(errorMessage);
+        throw new Error(
+          await getApiErrorMessage(response, "Unable to add product.")
+        );
       }
 
       setFormMessage("Product added successfully.");
@@ -207,6 +263,220 @@ function App() {
     }
   };
 
+  // ---------------- WAREHOUSE ----------------
+
+  const handleAddWarehouse = async (event) => {
+    event.preventDefault();
+
+    setFormMessage("");
+    setFormError("");
+
+    if (
+      !warehouseFormData.name.trim() ||
+      !warehouseFormData.location.trim()
+    ) {
+      setFormError("Please enter the warehouse name and location.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/warehouses/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: warehouseFormData.name.trim(),
+          location: warehouseFormData.location.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(response, "Unable to add warehouse.")
+        );
+      }
+
+      setFormMessage("Warehouse added successfully.");
+
+      setWarehouseFormData({
+        name: "",
+        location: "",
+      });
+
+      await fetchData();
+
+      setTimeout(() => {
+        setShowWarehouseForm(false);
+        setFormMessage("");
+      }, 700);
+    } catch (error) {
+      console.error("Add warehouse error:", error);
+
+      setFormError(
+        error.message || "Unable to add warehouse. Please try again."
+      );
+    }
+  };
+
+  // ---------------- INVENTORY ----------------
+
+  const handleAddInventory = async (event) => {
+    event.preventDefault();
+
+    setFormMessage("");
+    setFormError("");
+
+    if (
+      !inventoryFormData.product_id ||
+      !inventoryFormData.warehouse_id ||
+      inventoryFormData.quantity === ""
+    ) {
+      setFormError(
+        "Please select a product, warehouse and enter a quantity."
+      );
+      return;
+    }
+
+    if (Number(inventoryFormData.quantity) < 0) {
+      setFormError("Quantity cannot be negative.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/inventory/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: Number(inventoryFormData.product_id),
+          warehouse_id: Number(inventoryFormData.warehouse_id),
+          quantity: Number(inventoryFormData.quantity),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(response, "Unable to add inventory.")
+        );
+      }
+
+      setFormMessage("Inventory added successfully.");
+
+      setInventoryFormData({
+        product_id: "",
+        warehouse_id: "",
+        quantity: "",
+      });
+
+      await fetchData();
+
+      setTimeout(() => {
+        setShowInventoryForm(false);
+        setFormMessage("");
+      }, 700);
+    } catch (error) {
+      console.error("Add inventory error:", error);
+
+      setFormError(
+        error.message || "Unable to add inventory. Please try again."
+      );
+    }
+  };
+
+  // ---------------- ORDER ----------------
+
+  const handleAddOrder = async (event) => {
+    event.preventDefault();
+
+    setFormMessage("");
+    setFormError("");
+
+    if (
+      !orderFormData.product_id ||
+      !orderFormData.warehouse_id ||
+      orderFormData.quantity === ""
+    ) {
+      setFormError(
+        "Please select a product, warehouse and enter an order quantity."
+      );
+      return;
+    }
+
+    if (Number(orderFormData.quantity) <= 0) {
+      setFormError("Order quantity must be greater than 0.");
+      return;
+    }
+
+    const selectedProductId = Number(orderFormData.product_id);
+    const selectedWarehouseId = Number(orderFormData.warehouse_id);
+    const requestedQuantity = Number(orderFormData.quantity);
+
+    const matchingInventory = inventory.find(
+      (item) =>
+        Number(item.product_id) === selectedProductId &&
+        Number(item.warehouse_id) === selectedWarehouseId
+    );
+
+    if (!matchingInventory) {
+      setFormError(
+        "No inventory record exists for this product and warehouse."
+      );
+      return;
+    }
+
+    if (requestedQuantity > Number(matchingInventory.quantity)) {
+      setFormError(
+        `Not enough stock. Available quantity: ${matchingInventory.quantity}.`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/orders/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: selectedProductId,
+          warehouse_id: selectedWarehouseId,
+          quantity: requestedQuantity,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(response, "Unable to place order.")
+        );
+      }
+
+      setFormMessage("Order placed successfully.");
+
+      setOrderFormData({
+        product_id: "",
+        warehouse_id: "",
+        quantity: "",
+      });
+
+      await fetchData();
+
+      setTimeout(() => {
+        setShowOrderForm(false);
+        setFormMessage("");
+      }, 900);
+    } catch (error) {
+      console.error("Add order error:", error);
+
+      setFormError(
+        error.message || "Unable to place order. Please try again."
+      );
+    }
+  };
+
+  // ---------------- CLOSE FORMS ----------------
+
   const closeProductForm = () => {
     setShowProductForm(false);
 
@@ -220,6 +490,72 @@ function App() {
     setFormMessage("");
     setFormError("");
   };
+
+  const closeWarehouseForm = () => {
+    setShowWarehouseForm(false);
+
+    setWarehouseFormData({
+      name: "",
+      location: "",
+    });
+
+    setFormMessage("");
+    setFormError("");
+  };
+
+  const closeInventoryForm = () => {
+    setShowInventoryForm(false);
+
+    setInventoryFormData({
+      product_id: "",
+      warehouse_id: "",
+      quantity: "",
+    });
+
+    setFormMessage("");
+    setFormError("");
+  };
+
+  const closeOrderForm = () => {
+    setShowOrderForm(false);
+
+    setOrderFormData({
+      product_id: "",
+      warehouse_id: "",
+      quantity: "",
+    });
+
+    setFormMessage("");
+    setFormError("");
+  };
+
+  // ---------------- OPEN FORMS ----------------
+
+  const openProductForm = () => {
+    setFormMessage("");
+    setFormError("");
+    setShowProductForm(true);
+  };
+
+  const openWarehouseForm = () => {
+    setFormMessage("");
+    setFormError("");
+    setShowWarehouseForm(true);
+  };
+
+  const openInventoryForm = () => {
+    setFormMessage("");
+    setFormError("");
+    setShowInventoryForm(true);
+  };
+
+  const openOrderForm = () => {
+    setFormMessage("");
+    setFormError("");
+    setShowOrderForm(true);
+  };
+
+  // ---------------- DASHBOARD DATA ----------------
 
   const totalStock = inventory.reduce(
     (total, item) => total + Number(item.quantity || 0),
@@ -320,13 +656,6 @@ function App() {
             <button className="secondary-button" onClick={fetchData}>
               ↻ Refresh
             </button>
-
-            <button
-              className="primary-button"
-              onClick={() => setShowProductForm(true)}
-            >
-              + Add Product
-            </button>
           </div>
         </header>
 
@@ -383,6 +712,7 @@ function App() {
           </div>
         </section>
 
+        {/* PRODUCTS */}
         <section className="content-card" id="products">
           <div className="section-header">
             <div>
@@ -393,7 +723,7 @@ function App() {
 
             <button
               className="secondary-button"
-              onClick={() => setShowProductForm(true)}
+              onClick={openProductForm}
             >
               + Add Product
             </button>
@@ -471,6 +801,7 @@ function App() {
           )}
         </section>
 
+        {/* WAREHOUSES */}
         <section className="content-card" id="warehouses">
           <div className="section-header">
             <div>
@@ -478,6 +809,13 @@ function App() {
               <h3>Warehouses</h3>
               <p>Storage locations connected to the system.</p>
             </div>
+
+            <button
+              className="secondary-button"
+              onClick={openWarehouseForm}
+            >
+              + Add Warehouse
+            </button>
           </div>
 
           {loading ? (
@@ -488,7 +826,7 @@ function App() {
           ) : warehouses.length === 0 ? (
             <div className="empty-state compact">
               <h4>No warehouses found</h4>
-              <p>Warehouse information will appear here.</p>
+              <p>Add your first warehouse to get started.</p>
             </div>
           ) : (
             <div className="table-wrapper">
@@ -535,6 +873,7 @@ function App() {
           )}
         </section>
 
+        {/* INVENTORY */}
         <section className="content-card" id="inventory">
           <div className="section-header inventory-header">
             <div>
@@ -543,9 +882,21 @@ function App() {
               <p>Current stock across your warehouse locations.</p>
             </div>
 
-            <button className="secondary-button" onClick={fetchData}>
-              ↻ Refresh
-            </button>
+            <div className="section-actions">
+              <button
+                className="secondary-button"
+                onClick={openInventoryForm}
+              >
+                + Add Inventory
+              </button>
+
+              <button
+                className="secondary-button"
+                onClick={fetchData}
+              >
+                ↻ Refresh
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -558,8 +909,7 @@ function App() {
               <div className="empty-icon">≡</div>
               <h4>No inventory records</h4>
               <p>
-                Inventory records will appear here once stock is
-                assigned.
+                Add inventory by selecting a product and warehouse.
               </p>
             </div>
           ) : (
@@ -621,6 +971,7 @@ function App() {
           )}
         </section>
 
+        {/* ORDERS */}
         <section className="content-card" id="orders">
           <div className="section-header">
             <div>
@@ -628,6 +979,13 @@ function App() {
               <h3>Orders</h3>
               <p>Recent orders processed through the system.</p>
             </div>
+
+            <button
+              className="secondary-button"
+              onClick={openOrderForm}
+            >
+              + Add Order
+            </button>
           </div>
 
           {loading ? (
@@ -702,6 +1060,7 @@ function App() {
           )}
         </section>
 
+        {/* STOCK ALERTS */}
         <section className="content-card">
           <div className="section-header">
             <div>
@@ -714,7 +1073,10 @@ function App() {
           {lowStockItems.length === 0 ? (
             <div className="empty-state compact">
               <h4>Everything looks good</h4>
-              <p>No inventory records are currently below the low-stock threshold.</p>
+              <p>
+                No inventory records are currently below the low-stock
+                threshold.
+              </p>
             </div>
           ) : (
             <div className="alert-list">
@@ -724,6 +1086,7 @@ function App() {
                     <strong>
                       Product #{item.product_id}
                     </strong>
+
                     <span>
                       Warehouse #{item.warehouse_id}
                     </span>
@@ -744,6 +1107,7 @@ function App() {
         </footer>
       </main>
 
+      {/* ADD PRODUCT MODAL */}
       {showProductForm && (
         <div className="modal-overlay" onClick={closeProductForm}>
           <div
@@ -856,6 +1220,371 @@ function App() {
                   className="primary-button"
                 >
                   Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD WAREHOUSE MODAL */}
+      {showWarehouseForm && (
+        <div className="modal-overlay" onClick={closeWarehouseForm}>
+          <div
+            className="modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <span className="section-kicker">
+                  STORAGE LOCATIONS
+                </span>
+
+                <h3>Add Warehouse</h3>
+
+                <p>
+                  Add a new warehouse or storage location.
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={closeWarehouseForm}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleAddWarehouse}>
+              <div className="form-grid">
+                <div className="form-group full">
+                  <label htmlFor="warehouse-name">
+                    Warehouse Name
+                  </label>
+
+                  <input
+                    id="warehouse-name"
+                    name="name"
+                    type="text"
+                    value={warehouseFormData.name}
+                    onChange={handleWarehouseInputChange}
+                    placeholder="e.g. Main Warehouse"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="warehouse-location">
+                    Location
+                  </label>
+
+                  <input
+                    id="warehouse-location"
+                    name="location"
+                    type="text"
+                    value={warehouseFormData.location}
+                    onChange={handleWarehouseInputChange}
+                    placeholder="e.g. New York"
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <div className="form-message error">
+                  {formError}
+                </div>
+              )}
+
+              {formMessage && (
+                <div className="form-message success">
+                  {formMessage}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeWarehouseForm}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                >
+                  Save Warehouse
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD INVENTORY MODAL */}
+      {showInventoryForm && (
+        <div className="modal-overlay" onClick={closeInventoryForm}>
+          <div
+            className="modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <span className="section-kicker">
+                  STOCK MANAGEMENT
+                </span>
+
+                <h3>Add Inventory</h3>
+
+                <p>
+                  Assign stock to a product and warehouse.
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={closeInventoryForm}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleAddInventory}>
+              <div className="form-grid">
+                <div className="form-group full">
+                  <label htmlFor="inventory-product">
+                    Product
+                  </label>
+
+                  <select
+                    id="inventory-product"
+                    name="product_id"
+                    value={inventoryFormData.product_id}
+                    onChange={handleInventoryInputChange}
+                  >
+                    <option value="">
+                      Select a product
+                    </option>
+
+                    {products.map((product) => (
+                      <option
+                        key={product.id}
+                        value={product.id}
+                      >
+                        {product.name} — {product.sku}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="inventory-warehouse">
+                    Warehouse
+                  </label>
+
+                  <select
+                    id="inventory-warehouse"
+                    name="warehouse_id"
+                    value={inventoryFormData.warehouse_id}
+                    onChange={handleInventoryInputChange}
+                  >
+                    <option value="">
+                      Select a warehouse
+                    </option>
+
+                    {warehouses.map((warehouse) => (
+                      <option
+                        key={warehouse.id}
+                        value={warehouse.id}
+                      >
+                        {warehouse.name} — {warehouse.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="inventory-quantity">
+                    Quantity
+                  </label>
+
+                  <input
+                    id="inventory-quantity"
+                    name="quantity"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={inventoryFormData.quantity}
+                    onChange={handleInventoryInputChange}
+                    placeholder="e.g. 100"
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <div className="form-message error">
+                  {formError}
+                </div>
+              )}
+
+              {formMessage && (
+                <div className="form-message success">
+                  {formMessage}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeInventoryForm}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                >
+                  Save Inventory
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD ORDER MODAL */}
+      {showOrderForm && (
+        <div className="modal-overlay" onClick={closeOrderForm}>
+          <div
+            className="modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <span className="section-kicker">
+                  ORDER PROCESSING
+                </span>
+
+                <h3>Place Order</h3>
+
+                <p>
+                  Select the product, warehouse and quantity for
+                  this order.
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={closeOrderForm}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleAddOrder}>
+              <div className="form-grid">
+                <div className="form-group full">
+                  <label htmlFor="order-product">
+                    Product
+                  </label>
+
+                  <select
+                    id="order-product"
+                    name="product_id"
+                    value={orderFormData.product_id}
+                    onChange={handleOrderInputChange}
+                  >
+                    <option value="">
+                      Select a product
+                    </option>
+
+                    {products.map((product) => (
+                      <option
+                        key={product.id}
+                        value={product.id}
+                      >
+                        {product.name} — {product.sku}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="order-warehouse">
+                    Warehouse
+                  </label>
+
+                  <select
+                    id="order-warehouse"
+                    name="warehouse_id"
+                    value={orderFormData.warehouse_id}
+                    onChange={handleOrderInputChange}
+                  >
+                    <option value="">
+                      Select a warehouse
+                    </option>
+
+                    {warehouses.map((warehouse) => (
+                      <option
+                        key={warehouse.id}
+                        value={warehouse.id}
+                      >
+                        {warehouse.name} — {warehouse.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="order-quantity">
+                    Order Quantity
+                  </label>
+
+                  <input
+                    id="order-quantity"
+                    name="quantity"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={orderFormData.quantity}
+                    onChange={handleOrderInputChange}
+                    placeholder="e.g. 20"
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <div className="form-message error">
+                  {formError}
+                </div>
+              )}
+
+              {formMessage && (
+                <div className="form-message success">
+                  {formMessage}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeOrderForm}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                >
+                  Place Order
                 </button>
               </div>
             </form>
