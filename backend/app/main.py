@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,7 +25,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="AI Inventory Optimization System",
     description="Backend API for inventory synchronization and optimization",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 
@@ -31,12 +33,20 @@ app = FastAPI(
 # CORS CONFIGURATION
 # ---------------------------------------------------------
 
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+
+if frontend_url and frontend_url not in allowed_origins:
+    allowed_origins.append(frontend_url)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,5 +98,5 @@ def get_me(
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email,
-        "is_active": current_user.is_active
+        "is_active": current_user.is_active,
     }
