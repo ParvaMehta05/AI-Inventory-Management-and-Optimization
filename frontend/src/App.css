@@ -1,6 +1,6 @@
 /* =========================================================
    AI INVENTORY MANAGEMENT
-   Main dashboard styling
+   Main dashboard styling (readability + alignment pass)
    ========================================================= */
 
 * {
@@ -21,6 +21,19 @@
   background: #f5f6f8;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  line-height: 1.2;
+}
+
+/* Any icon glyph/element (emoji, icon-font <i>, svg wrapper) inherits a
+   fixed line-height so it never sits taller or shorter than its sibling
+   text — this is what causes rows to look "up and down" misaligned. */
+i,
+svg,
+.nav-icon,
+.stat-icon,
+.empty-icon,
+.modal-close {
+  line-height: 1;
 }
 
 html {
@@ -68,13 +81,13 @@ input:focus-visible {
   top: 0;
   left: 0;
 
-  width: 220px;
+  width: 240px;
   height: 100vh;
 
   display: flex;
   flex-direction: column;
 
-  padding: 24px 14px;
+  padding: 24px 16px;
 
   background: #ffffff;
   border-right: 1px solid #e2e5e9;
@@ -91,8 +104,8 @@ input:focus-visible {
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
 
   display: flex;
   align-items: center;
@@ -105,7 +118,7 @@ input:focus-visible {
   background: #3566d6;
   color: #ffffff;
 
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -114,24 +127,27 @@ input:focus-visible {
 
   color: #1f252d;
 
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .brand span {
-  color: #9aa2ad;
-  font-size: 8px;
+  color: #717a86;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
 .nav-heading {
-  margin: 50px 0 14px;
-  padding-left: 8px;
+  margin: 32px 0 12px;
+  padding-left: 10px;
 
-  color: #9aa2ad;
+  color: #7e8792;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1.1px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .sidebar-nav {
@@ -153,10 +169,11 @@ input:focus-visible {
   border-radius: 7px;
 
   background: transparent;
-  color: #69727e;
+  color: #4d5661;
 
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 500;
+  line-height: 1;
 
   text-align: left;
 
@@ -177,12 +194,24 @@ input:focus-visible {
 }
 
 .nav-icon {
-  width: 17px;
+  width: 20px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   color: #7f8995;
 
-  font-size: 11px;
+  font-size: 15px;
+  line-height: 1;
   text-align: center;
+}
+
+.nav-item span {
+  line-height: 1;
 }
 
 .nav-item.active .nav-icon {
@@ -211,15 +240,15 @@ input:focus-visible {
 }
 
 .connection-row strong {
-  color: #4f5965;
+  color: #3d4550;
 
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .connection-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 
   flex-shrink: 0;
 
@@ -240,9 +269,10 @@ input:focus-visible {
 
   margin-top: 8px;
 
-  color: #a0a7b0;
+  color: #5f6874;
 
-  font-size: 8px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 /* =========================================================
@@ -250,9 +280,9 @@ input:focus-visible {
    ========================================================= */
 
 .main-content {
-  width: calc(100% - 220px);
+  width: calc(100% - 240px);
 
-  margin-left: 220px;
+  margin-left: 240px;
 
   min-height: 100vh;
 
@@ -264,7 +294,7 @@ input:focus-visible {
    ========================================================= */
 
 .topbar {
-  max-width: 1040px;
+  max-width: 1080px;
 
   display: flex;
   align-items: flex-start;
@@ -278,11 +308,12 @@ input:focus-visible {
 .breadcrumb {
   margin-bottom: 10px;
 
-  color: #9aa2ad;
+  color: #7e8792;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .topbar h2 {
@@ -290,25 +321,28 @@ input:focus-visible {
 
   color: #20262e;
 
-  font-size: 25px;
+  font-size: 31px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
 .topbar p {
   margin: 7px 0 0;
 
-  color: #8d96a1;
+  color: #4a525d;
 
-  font-size: 11px;
+  font-size: 15.5px;
+  font-weight: 450;
+  line-height: 1.5;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 
-  padding-top: 1px;
+  padding-top: 2px;
 }
 
 /* =========================================================
@@ -317,14 +351,19 @@ input:focus-visible {
 
 .primary-button,
 .secondary-button {
-  min-height: 38px;
+  min-height: 42px;
 
-  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 18px;
 
   border-radius: 6px;
 
-  font-size: 10px;
+  font-size: 14.5px;
   font-weight: 600;
+  line-height: 1;
 
   transition:
     background 0.15s ease,
@@ -356,7 +395,7 @@ input:focus-visible {
   border: 1px solid #dce1e6;
 
   background: #ffffff;
-  color: #5d6671;
+  color: #454e59;
 }
 
 .secondary-button:hover {
@@ -369,34 +408,36 @@ input:focus-visible {
    ========================================================= */
 
 .stats-grid {
-  max-width: 1040px;
+  max-width: 1080px;
 
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 
-  gap: 12px;
+  gap: 14px;
 
-  margin: 0 auto 20px;
+  margin: 0 auto 22px;
 }
 
 .stat-card {
-  min-height: 112px;
+  min-height: 118px;
 
   display: flex;
-  align-items: flex-start;
-  gap: 13px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 
-  padding: 18px 16px;
+  padding: 22px 18px;
 
   border: 1px solid #e0e4e8;
-  border-radius: 8px;
+  border-radius: 10px;
 
   background: #ffffff;
+  text-align: center;
 }
 
 .stat-icon {
-  width: 31px;
-  height: 31px;
+  width: 38px;
+  height: 38px;
 
   display: flex;
   align-items: center;
@@ -404,9 +445,9 @@ input:focus-visible {
 
   flex-shrink: 0;
 
-  border-radius: 7px;
+  border-radius: 8px;
 
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -432,27 +473,32 @@ input:focus-visible {
 
 .stat-content {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .stat-content span {
   display: block;
 
-  margin-top: 1px;
+  min-height: 2.8em;
 
-  color: #7e8792;
+  color: #3566d6;
 
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .stat-content strong {
   display: block;
 
-  margin-top: 7px;
+  margin-top: 8px;
 
-  color: #222931;
+  color: #1c222a;
 
-  font-size: 23px;
+  font-size: 28.5px;
   font-weight: 700;
   line-height: 1;
 }
@@ -460,11 +506,12 @@ input:focus-visible {
 .stat-content small {
   display: block;
 
-  margin-top: 7px;
+  margin-top: 8px;
 
-  color: #a1a8b0;
+  color: #5f6874;
 
-  font-size: 8px;
+  font-size: 12.5px;
+  line-height: 1.3;
 }
 
 /* =========================================================
@@ -472,40 +519,53 @@ input:focus-visible {
    ========================================================= */
 
 .content-card {
-  max-width: 1040px;
+  max-width: 1080px;
 
-  margin: 0 auto 18px;
+  margin: 0 auto 20px;
 
   overflow: hidden;
 
   border: 1px solid #dfe3e7;
-  border-radius: 8px;
+  border-radius: 10px;
 
   background: #ffffff;
 }
 
 .section-header {
-  min-height: 116px;
+  min-height: 100px;
 
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 20px;
 
   padding: 24px 30px;
 
   border-bottom: 1px solid #e7eaed;
+  text-align: left;
+}
+
+.section-header > *:first-child {
+  text-align: left;
+}
+
+.section-header .primary-button,
+.section-header .secondary-button {
+  margin-top: 1px;
 }
 
 .section-kicker {
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 
-  color: #9aa2ad;
+  color: #7e8792;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-align: left;
 }
 
 .section-header h3 {
@@ -513,20 +573,25 @@ input:focus-visible {
 
   color: #252b33;
 
-  font-size: 16px;
+  font-size: 20.5px;
   font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
 }
 
 .section-header p {
-  margin: 7px 0 0;
+  margin: 6px 0 0;
 
-  color: #9aa1aa;
+  color: #4a525d;
 
-  font-size: 9px;
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .inventory-header {
-  min-height: 105px;
+  min-height: 100px;
 }
 
 /* =========================================================
@@ -544,7 +609,12 @@ input:focus-visible {
   border-collapse: collapse;
   table-layout: fixed;
 
-  font-size: 11px;
+  font-size: 15px;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 70px;
 }
 
 .data-table thead {
@@ -552,30 +622,33 @@ input:focus-visible {
 }
 
 .data-table th {
-  height: 43px;
+  height: 48px;
 
   padding: 0 20px;
 
   border-bottom: 1px solid #e8ebee;
 
-  color: #8d96a1;
+  color: #6b7480;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.55px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 
   text-align: left;
   vertical-align: middle;
 }
 
 .data-table td {
-  height: 58px;
+  height: 64px;
 
   padding: 0 20px;
 
   border-bottom: 1px solid #eef0f2;
 
-  color: #69727e;
+  color: #4d5661;
+
+  font-size: 14.5px;
 
   text-align: left;
   vertical-align: middle;
@@ -594,26 +667,26 @@ input:focus-visible {
 }
 
 .table-primary {
-  color: #333a43;
+  color: #262d35;
 
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .table-secondary {
-  color: #707984;
+  color: #58616c;
 
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .muted-text {
-  color: #9ba3ad;
+  color: #5f6874;
 
-  font-size: 9px;
+  font-size: 12.5px;
 }
 
 .sku-text {
-  color: #68717d;
+  color: #4d5661;
 
   font-family:
     "SFMono-Regular",
@@ -621,30 +694,33 @@ input:focus-visible {
     "Liberation Mono",
     monospace;
 
-  font-size: 9px;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
 }
 
 .category-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  line-height: 1;
 
-  min-height: 25px;
+  min-height: 27px;
 
-  padding: 0 9px;
+  padding: 0 10px;
 
   border-radius: 5px;
 
-  background: #f1f3f5;
-  color: #626b76;
+  background: #eef0f3;
+  color: #454e59;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .price-text {
-  color: #303841;
+  color: #20262e;
 
-  font-size: 10px;
+  font-size: 14.5px;
   font-weight: 600;
 }
 
@@ -652,19 +728,20 @@ input:focus-visible {
   display: inline-flex;
   align-items: center;
 
-  min-width: 34px;
-  min-height: 24px;
+  min-width: 40px;
+  min-height: 27px;
 
   justify-content: center;
+  line-height: 1;
 
-  padding: 0 8px;
+  padding: 0 9px;
 
   border-radius: 5px;
 
   background: #edf2ff;
-  color: #3566d6;
+  color: #2f5fc9;
 
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -690,8 +767,8 @@ input:focus-visible {
 }
 
 .empty-icon {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
 
   display: flex;
   align-items: center;
@@ -699,29 +776,30 @@ input:focus-visible {
 
   margin-bottom: 12px;
 
-  border-radius: 7px;
+  border-radius: 8px;
 
   background: #f3f5f7;
-  color: #8f98a3;
+  color: #767f8a;
 
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .empty-state h4 {
   margin: 0;
 
-  color: #454d57;
+  color: #333b45;
 
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .empty-state p {
   margin: 6px 0 0;
 
-  color: #9aa2ad;
+  color: #5f6874;
 
-  font-size: 9px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* =========================================================
@@ -729,17 +807,18 @@ input:focus-visible {
    ========================================================= */
 
 .page-footer {
-  max-width: 1040px;
+  max-width: 1080px;
 
   display: flex;
+  align-items: center;
   justify-content: space-between;
 
-  margin: 28px auto 0;
+  margin: 30px auto 0;
   padding: 0 2px;
 
-  color: #a0a7af;
+  color: #7e8792;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -756,7 +835,7 @@ input:focus-visible {
 
   padding: 20px;
 
-  background: rgba(26, 31, 38, 0.35);
+  background: rgba(26, 31, 38, 0.4);
 
   z-index: 100;
 
@@ -765,12 +844,12 @@ input:focus-visible {
 
 .modal {
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
 
   overflow: hidden;
 
   border: 1px solid #dfe3e8;
-  border-radius: 10px;
+  border-radius: 12px;
 
   background: #ffffff;
 
@@ -785,6 +864,7 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
 
   padding: 24px 26px 20px;
 
@@ -794,41 +874,43 @@ input:focus-visible {
 .modal-header h3 {
   margin: 0;
 
-  color: #252b33;
+  color: #20262e;
 
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
 }
 
 .modal-header p {
   margin: 6px 0 0;
 
-  color: #9199a3;
+  color: #4a525d;
 
-  font-size: 9px;
+  font-size: 14.5px;
+  line-height: 1.4;
 }
 
 .modal-close {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 
   border: 0;
   border-radius: 6px;
 
   background: #f5f6f7;
-  color: #707984;
+  color: #4d5661;
 
-  font-size: 18px;
+  font-size: 20.5px;
   line-height: 1;
 }
 
 .modal-close:hover {
   background: #eceff2;
-  color: #424a53;
+  color: #2b323b;
 }
 
 /* =========================================================
@@ -857,25 +939,25 @@ input:focus-visible {
 }
 
 .form-group label {
-  color: #555e69;
+  color: #3d4550;
 
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .form-group input {
   width: 100%;
-  height: 40px;
+  height: 44px;
 
-  padding: 0 11px;
+  padding: 0 12px;
 
   border: 1px solid #dce1e6;
   border-radius: 6px;
 
   background: #ffffff;
-  color: #303841;
+  color: #20262e;
 
-  font-size: 10px;
+  font-size: 14.5px;
 
   transition:
     border-color 0.15s ease,
@@ -883,7 +965,7 @@ input:focus-visible {
 }
 
 .form-group input::placeholder {
-  color: #b1b7bf;
+  color: #97a0aa;
 }
 
 .form-group input:hover {
@@ -901,32 +983,32 @@ input:focus-visible {
 .form-message {
   margin-top: 16px;
 
-  padding: 10px 11px;
+  padding: 11px 12px;
 
   border-radius: 6px;
 
-  font-size: 9px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .form-message.error {
   border: 1px solid #f0d1d1;
 
   background: #fff6f6;
-  color: #b44d4d;
+  color: #a13d3d;
 }
 
 .form-message.success {
   border: 1px solid #cfe9dc;
 
   background: #f3fbf6;
-  color: #32835d;
+  color: #257550;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
 
   margin-top: 22px;
   padding-top: 18px;
@@ -1007,6 +1089,7 @@ input:focus-visible {
   .nav-item {
     width: auto;
     flex: 1 1 auto;
+    justify-content: center;
   }
 
   .connection-card {
@@ -1039,6 +1122,9 @@ input:focus-visible {
 
   .section-header {
     min-height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
 
     padding: 20px;
   }
@@ -1049,6 +1135,7 @@ input:focus-visible {
 
   .page-footer {
     flex-direction: column;
+    align-items: flex-start;
     gap: 6px;
   }
 }
