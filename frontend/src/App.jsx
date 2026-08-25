@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+).replace(/\/$/, "");
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -127,7 +129,7 @@ function App() {
 
     if (!hasConnection) {
       setApiError(
-        "Unable to connect to the FastAPI backend. Make sure Uvicorn is running on port 8000."
+        "Unable to connect to the FastAPI backend. Please check the backend URL and CORS configuration."
       );
     } else if (errors.length > 0) {
       setApiError(errors.join(" • "));
@@ -636,7 +638,9 @@ function App() {
             </strong>
           </div>
 
-          <small>FastAPI · localhost:8000</small>
+          <small>
+            FastAPI · {API_URL.replace(/^https?:\/\//, "")}
+          </small>
         </div>
       </aside>
 
@@ -712,7 +716,6 @@ function App() {
           </div>
         </section>
 
-        {/* PRODUCTS */}
         <section className="content-card" id="products">
           <div className="section-header">
             <div>
@@ -801,7 +804,6 @@ function App() {
           )}
         </section>
 
-        {/* WAREHOUSES */}
         <section className="content-card" id="warehouses">
           <div className="section-header">
             <div>
@@ -873,7 +875,6 @@ function App() {
           )}
         </section>
 
-        {/* INVENTORY */}
         <section className="content-card" id="inventory">
           <div className="section-header inventory-header">
             <div>
@@ -971,7 +972,6 @@ function App() {
           )}
         </section>
 
-        {/* ORDERS */}
         <section className="content-card" id="orders">
           <div className="section-header">
             <div>
@@ -1060,7 +1060,6 @@ function App() {
           )}
         </section>
 
-        {/* STOCK ALERTS */}
         <section className="content-card">
           <div className="section-header">
             <div>
