@@ -41,17 +41,29 @@ def create_inventory(
             status_code=404,
             detail="Warehouse not found"
         )
-    existing_inventory = db.query(Inventory).filter(
-    Inventory.product_id == inventory.product_id,
-    Inventory.warehouse_id == inventory.warehouse_id
-    ).first()
 
-    if existing_inventory is not None:
+    if inventory.quantity < 0:
         raise HTTPException(
-            status_code=409,
-            detail="Inventory for this product and warehouse already exists"
+            status_code=400,
+            detail="Quantity cannot be negative"
         )
 
+    existing_inventory = db.query(Inventory).filter(
+        Inventory.product_id == inventory.product_id,
+        Inventory.warehouse_id == inventory.warehouse_id
+    ).first()
+
+    # If inventory already exists, add the new quantity
+    # to the existing quantity.
+    if existing_inventory is not None:
+        existing_inventory.quantity += inventory.quantity
+
+        db.commit()
+        db.refresh(existing_inventory)
+
+        return existing_inventory
+
+    # If inventory does not exist, create a new record.
     new_inventory = Inventory(
         product_id=inventory.product_id,
         warehouse_id=inventory.warehouse_id,
@@ -75,6 +87,7 @@ def get_inventory(
     inventory = db.query(Inventory).all()
 
     return inventory
+
 
 @router.put(
     "/{inventory_id}",
@@ -107,10 +120,11 @@ def update_inventory(
     db.refresh(inventory)
 
     return inventory
+
+
 @router.delete(
     "/{inventory_id}"
 )
-
 def delete_inventory(
     inventory_id: int,
     db: Session = Depends(get_db)
