@@ -571,7 +571,15 @@ function App() {
   const handleNavigation = (section) => {
     setActiveSection(section);
 
-    const element = document.getElementById(section.toLowerCase());
+    const sectionIds = {
+      Dashboard: "dashboard",
+      Products: "products",
+      Warehouses: "warehouses",
+      Inventory: "inventory",
+      Orders: "orders",
+    };
+
+    const element = document.getElementById(sectionIds[section]);
 
     if (element) {
       element.scrollIntoView({
@@ -926,46 +934,69 @@ function App() {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>PRODUCT ID</th>
-                    <th>WAREHOUSE ID</th>
+                    <th>PRODUCT</th>
+                    <th>WAREHOUSE</th>
                     <th>QUANTITY</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {inventory.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <span className="muted-text">
-                          #{item.id}
-                        </span>
-                      </td>
+                  {inventory.map((item) => {
+                    const product = products.find(
+                      (entry) => Number(entry.id) === Number(item.product_id)
+                    );
+                    const warehouse = warehouses.find(
+                      (entry) => Number(entry.id) === Number(item.warehouse_id)
+                    );
 
-                      <td>
-                        <span className="table-secondary">
-                          #{item.product_id}
-                        </span>
-                      </td>
+                    return (
+                      <tr key={item.id}>
+                        <td>
+                          <span className="muted-text">
+                            #{item.id}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="table-secondary">
-                          #{item.warehouse_id}
-                        </span>
-                      </td>
+                        <td>
+                          <div style={{ display: "grid", gap: "4px" }}>
+                            <span className="table-primary">
+                              {product?.name || "Unknown product"}
+                            </span>
+                            <span className="table-secondary">
+                              ID: #{item.product_id}
+                              {product?.sku ? ` • SKU: ${product.sku}` : ""}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td>
-                        <span
-                          className={`quantity-badge ${
-                            Number(item.quantity) <= 10
-                              ? "low-stock"
-                              : ""
-                          }`}
-                        >
-                          {item.quantity}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        <td>
+                          <div style={{ display: "grid", gap: "4px" }}>
+                            <span className="table-primary">
+                              {warehouse?.name || "Unknown warehouse"}
+                            </span>
+                            <span className="table-secondary">
+                              ID: #{item.warehouse_id}
+                              {warehouse?.location
+                                ? ` • ${warehouse.location}`
+                                : ""}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`quantity-badge ${
+                              Number(item.quantity) <= 10
+                                ? "low-stock"
+                                : ""
+                            }`}
+                          >
+                            {item.quantity}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1373,10 +1404,65 @@ function App() {
                         key={product.id}
                         value={product.id}
                       >
-                        {product.name} — {product.sku}
+                        #{product.id} — {product.name}
+                        {product.sku ? ` — ${product.sku}` : ""}
                       </option>
                     ))}
                   </select>
+
+                  {inventoryFormData.product_id && (
+                    (() => {
+                      const selectedProduct = products.find(
+                        (product) =>
+                          Number(product.id) ===
+                          Number(inventoryFormData.product_id)
+                      );
+
+                      if (!selectedProduct) return null;
+
+                      return (
+                        <div
+                          style={{
+                            marginTop: "10px",
+                            padding: "12px 14px",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "10px",
+                            background: "#f8fafc",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: "#64748b",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            Selected Product
+                          </div>
+                          <div
+                            style={{
+                              marginTop: "4px",
+                              fontWeight: 700,
+                              color: "#1f2937",
+                            }}
+                          >
+                            #{selectedProduct.id} — {selectedProduct.name}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: "3px",
+                              fontSize: "13px",
+                              color: "#64748b",
+                            }}
+                          >
+                            SKU: {selectedProduct.sku || "—"}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 <div className="form-group full">
@@ -1399,10 +1485,65 @@ function App() {
                         key={warehouse.id}
                         value={warehouse.id}
                       >
-                        {warehouse.name} — {warehouse.location}
+                        #{warehouse.id} — {warehouse.name}
+                        {warehouse.location ? ` — ${warehouse.location}` : ""}
                       </option>
                     ))}
                   </select>
+
+                  {inventoryFormData.warehouse_id && (
+                    (() => {
+                      const selectedWarehouse = warehouses.find(
+                        (warehouse) =>
+                          Number(warehouse.id) ===
+                          Number(inventoryFormData.warehouse_id)
+                      );
+
+                      if (!selectedWarehouse) return null;
+
+                      return (
+                        <div
+                          style={{
+                            marginTop: "10px",
+                            padding: "12px 14px",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "10px",
+                            background: "#f8fafc",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: "#64748b",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            Selected Warehouse
+                          </div>
+                          <div
+                            style={{
+                              marginTop: "4px",
+                              fontWeight: 700,
+                              color: "#1f2937",
+                            }}
+                          >
+                            #{selectedWarehouse.id} — {selectedWarehouse.name}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: "3px",
+                              fontSize: "13px",
+                              color: "#64748b",
+                            }}
+                          >
+                            Location: {selectedWarehouse.location || "—"}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 <div className="form-group full">
