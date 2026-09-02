@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/mock/:channel",
+      "destination": "/index.html"
+    }
+  ]
+}
