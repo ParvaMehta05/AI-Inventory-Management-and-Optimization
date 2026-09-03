@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import Dashboard from "./pages/Dashboard";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -711,7 +712,7 @@ function App() {
             </div>
           </div>
         </section>
-
+        
         {/* PRODUCTS */}
         <section className="content-card" id="products">
           <div className="section-header">
@@ -970,7 +971,12 @@ function App() {
             </div>
           )}
         </section>
-
+        
+        {/* AI INVENTORY OPTIMIZATION */}
+        <section className="content-card" id="optimization">
+          <Dashboard products={products} warehouses={warehouses} />
+        </section>
+        
         {/* ORDERS */}
         <section className="content-card" id="orders">
           <div className="section-header">
@@ -1100,7 +1106,7 @@ function App() {
             </div>
           )}
         </section>
-
+           
         <footer className="page-footer">
           <span>AI Inventory Management</span>
           <span>Inventory optimization dashboard</span>
@@ -1322,7 +1328,7 @@ function App() {
           </div>
         </div>
       )}
-
+ 
       {/* ADD INVENTORY MODAL */}
       {showInventoryForm && (
         <div className="modal-overlay" onClick={closeInventoryForm}>
@@ -1593,6 +1599,7 @@ function App() {
       )}
     </div>
   );
+ 
 }
 
 export default App;
