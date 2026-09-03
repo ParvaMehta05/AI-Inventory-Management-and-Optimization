@@ -9,13 +9,14 @@ from app.models.product import Product
 from app.models.warehouse import Warehouse
 from app.models.inventory import Inventory
 from app.models.order import Order
+from app.models.sale import Sale
 
 from app.routes.auth import router as auth_router
 from app.routes.products import router as product_router
 from app.routes.warehouse import router as warehouse_router
 from app.routes.inventory import router as inventory_router
 from app.routes.order import router as order_router
-
+from app.routes.optimization import router as optimization_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -52,7 +53,7 @@ app.include_router(product_router)
 app.include_router(warehouse_router)
 app.include_router(inventory_router)
 app.include_router(order_router)
-
+app.include_router(optimization_router)
 
 # ---------------------------------------------------------
 # ROOT
