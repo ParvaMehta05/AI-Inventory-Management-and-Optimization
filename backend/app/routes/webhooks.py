@@ -39,6 +39,14 @@ def receive_order_webhook(
             detail="Unsupported sales channel",
         )
 
+    supported_statuses = {"PLACED"}
+
+    if payload.status not in supported_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported order status. Only PLACED orders are supported.",
+        )
+
     # Idempotency: if the marketplace retries the same webhook, do not
     # subtract stock a second time.
     existing_event = db.query(ChannelOrder).filter(
