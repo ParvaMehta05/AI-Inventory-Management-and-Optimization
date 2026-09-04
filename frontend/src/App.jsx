@@ -1110,23 +1110,36 @@ function App() {
             </div>
           ) : (
             <div className="alert-list">
-              {lowStockItems.map((item) => (
-                <div className="stock-alert" key={item.id}>
-                  <div>
-                    <strong>
-                      Product #{item.product_id}
-                    </strong>
+              {lowStockItems.map((item) => {
+  const product = products.find(
+    (entry) => Number(entry.id) === Number(item.product_id)
+  );
 
-                    <span>
-                      Warehouse #{item.warehouse_id}
-                    </span>
-                  </div>
+  const warehouse = warehouses.find(
+    (entry) => Number(entry.id) === Number(item.warehouse_id)
+  );
 
-                  <span className="low-stock-value">
-                    {item.quantity} units
-                  </span>
-                </div>
-              ))}
+  return (
+    <div className="stock-alert" key={item.id}>
+      <div>
+        <strong>
+          {product?.name || `Product #${item.product_id}`}
+        </strong>
+
+        <span>
+          Product #{item.product_id} ·{" "}
+          {warehouse?.name || `Warehouse #${item.warehouse_id}`}
+          {warehouse?.name ? ` (#${item.warehouse_id})` : ""}
+        </span>
+      </div>
+
+      <span className="low-stock-value">
+        {item.quantity}{" "}
+        {Number(item.quantity) === 1 ? "unit" : "units"}
+      </span>
+    </div>
+  );
+})}
             </div>
           )}
         </section>
