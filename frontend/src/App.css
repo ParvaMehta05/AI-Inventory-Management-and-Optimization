@@ -1,6 +1,6 @@
 /* =========================================================
    AI INVENTORY MANAGEMENT
-   Main dashboard styling (readability + alignment pass)
+   Main application styling
    ========================================================= */
 
 * {
@@ -19,21 +19,10 @@
 
   color: #252b33;
   background: #f5f6f8;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   line-height: 1.2;
-}
-
-/* Any icon glyph/element (emoji, icon-font <i>, svg wrapper) inherits a
-   fixed line-height so it never sits taller or shorter than its sibling
-   text — this is what causes rows to look "up and down" misaligned. */
-i,
-svg,
-.nav-icon,
-.stat-icon,
-.empty-icon,
-.modal-close {
-  line-height: 1;
 }
 
 html {
@@ -48,7 +37,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -57,9 +47,19 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid #3566d6;
   outline-offset: 2px;
+}
+
+i,
+svg,
+.nav-icon,
+.stat-icon,
+.empty-icon,
+.modal-close {
+  line-height: 1;
 }
 
 /* =========================================================
@@ -134,6 +134,7 @@ input:focus-visible {
 
 .brand span {
   color: #717a86;
+
   font-size: 12.5px;
   font-weight: 500;
 }
@@ -163,7 +164,7 @@ input:focus-visible {
   align-items: center;
   gap: 12px;
 
-  padding: 12px 12px;
+  padding: 12px;
 
   border: 0;
   border-radius: 7px;
@@ -290,7 +291,7 @@ input:focus-visible {
 }
 
 /* =========================================================
-   TOP BAR
+   TOPBAR
    ========================================================= */
 
 .topbar {
@@ -343,6 +344,57 @@ input:focus-visible {
   gap: 10px;
 
   padding-top: 2px;
+}
+
+/* =========================================================
+   API ALERT
+   ========================================================= */
+
+.api-alert {
+  max-width: 1080px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin: 0 auto 22px;
+  padding: 15px 18px;
+
+  border: 1px solid #f0d1d1;
+  border-radius: 8px;
+
+  background: #fff7f7;
+  color: #8f3d3d;
+}
+
+.api-alert strong {
+  font-size: 14px;
+}
+
+.api-alert p {
+  margin: 5px 0 0;
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.api-alert button {
+  flex-shrink: 0;
+
+  min-height: 36px;
+
+  padding: 0 14px;
+
+  border: 1px solid #e4bcbc;
+  border-radius: 6px;
+
+  background: #ffffff;
+  color: #8f3d3d;
+
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* =========================================================
@@ -424,6 +476,7 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
+
   gap: 10px;
 
   padding: 22px 18px;
@@ -432,6 +485,7 @@ input:focus-visible {
   border-radius: 10px;
 
   background: #ffffff;
+
   text-align: center;
 }
 
@@ -473,9 +527,11 @@ input:focus-visible {
 
 .stat-content {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
+
   text-align: center;
 }
 
@@ -537,11 +593,13 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 20px;
 
   padding: 24px 30px;
 
   border-bottom: 1px solid #e7eaed;
+
   text-align: left;
 }
 
@@ -564,6 +622,7 @@ input:focus-visible {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.6px;
+
   text-transform: uppercase;
   text-align: left;
 }
@@ -575,6 +634,7 @@ input:focus-visible {
 
   font-size: 20.5px;
   font-weight: 700;
+
   line-height: 1.3;
   text-align: left;
 }
@@ -586,12 +646,19 @@ input:focus-visible {
 
   font-size: 15px;
   font-weight: 450;
+
   line-height: 1.4;
   text-align: left;
 }
 
 .inventory-header {
   min-height: 100px;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* =========================================================
@@ -633,8 +700,8 @@ input:focus-visible {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
 
+  text-transform: uppercase;
   text-align: left;
   vertical-align: middle;
 }
@@ -679,6 +746,11 @@ input:focus-visible {
   font-size: 13px;
 }
 
+.table-cell-stack {
+  display: grid;
+  gap: 4px;
+}
+
 .muted-text {
   color: #5f6874;
 
@@ -702,7 +774,6 @@ input:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
 
   min-height: 27px;
 
@@ -715,6 +786,8 @@ input:focus-visible {
 
   font-size: 12px;
   font-weight: 600;
+
+  line-height: 1;
 }
 
 .price-text {
@@ -727,12 +800,10 @@ input:focus-visible {
 .quantity-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 
   min-width: 40px;
   min-height: 27px;
-
-  justify-content: center;
-  line-height: 1;
 
   padding: 0 9px;
 
@@ -743,6 +814,128 @@ input:focus-visible {
 
   font-size: 13px;
   font-weight: 700;
+
+  line-height: 1;
+}
+
+.quantity-badge.low-stock {
+  background: #fff1f1;
+  color: #b44a4a;
+}
+
+.low-stock-value {
+  color: #b44a4a;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.alert-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 27px;
+
+  padding: 0 10px;
+
+  border: 1px solid #f1d0d0;
+  border-radius: 5px;
+
+  background: #fff5f5;
+  color: #a64040;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   STOCK ALERTS TABLE
+   IMPORTANT:
+   THESE RULES APPLY ONLY TO .stock-alert-table.
+   THEY DO NOT CHANGE INVENTORY / PRODUCTS / WAREHOUSES.
+   ========================================================= */
+
+.stock-alert-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.stock-alert-table th,
+.stock-alert-table td {
+  text-align: left;
+  vertical-align: middle;
+}
+
+.stock-alert-table th:nth-child(1),
+.stock-alert-table td:nth-child(1) {
+  width: 30%;
+}
+
+.stock-alert-table th:nth-child(2),
+.stock-alert-table td:nth-child(2) {
+  width: 30%;
+}
+
+.stock-alert-table th:nth-child(3),
+.stock-alert-table td:nth-child(3) {
+  width: 20%;
+  text-align: center;
+}
+
+.stock-alert-table th:nth-child(4),
+.stock-alert-table td:nth-child(4) {
+  width: 20%;
+  text-align: center;
+}
+
+.stock-alert-table .low-stock-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 78px;
+  min-height: 28px;
+
+  padding: 0 10px;
+
+  border-radius: 5px;
+
+  background: #fff1f1;
+  color: #b44a4a;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stock-alert-table .alert-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 82px;
+  min-height: 28px;
+
+  padding: 0 10px;
+
+  border: 1px solid #f1d0d0;
+  border-radius: 5px;
+
+  background: #fff5f5;
+  color: #a64040;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+
+  line-height: 1;
+  white-space: nowrap;
 }
 
 /* =========================================================
@@ -814,6 +1007,7 @@ input:focus-visible {
   justify-content: space-between;
 
   margin: 30px auto 0;
+
   padding: 0 2px;
 
   color: #7e8792;
@@ -846,7 +1040,9 @@ input:focus-visible {
   width: 100%;
   max-width: 520px;
 
-  overflow: hidden;
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
 
   border: 1px solid #dfe3e8;
   border-radius: 12px;
@@ -864,6 +1060,7 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 16px;
 
   padding: 24px 26px 20px;
@@ -896,6 +1093,7 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
+
   flex-shrink: 0;
 
   border: 0;
@@ -931,6 +1129,7 @@ input:focus-visible {
 .form-group {
   display: flex;
   flex-direction: column;
+
   gap: 7px;
 }
 
@@ -945,7 +1144,8 @@ input:focus-visible {
   font-weight: 600;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   width: 100%;
   height: 44px;
 
@@ -968,16 +1168,23 @@ input:focus-visible {
   color: #97a0aa;
 }
 
-.form-group input:hover {
+.form-group input:hover,
+.form-group select:hover {
   border-color: #cbd2da;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   border-color: #3566d6;
 
-  box-shadow: 0 0 0 3px rgba(53, 102, 214, 0.09);
+  box-shadow:
+    0 0 0 3px rgba(53, 102, 214, 0.09);
 
   outline: none;
+}
+
+.form-group select {
+  cursor: pointer;
 }
 
 .form-message {
@@ -1008,12 +1215,235 @@ input:focus-visible {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+
   gap: 10px;
 
   margin-top: 22px;
   padding-top: 18px;
 
   border-top: 1px solid #edf0f2;
+}
+
+/* =========================================================
+   AI OPTIMIZATION DASHBOARD
+   ========================================================= */
+
+.dashboard {
+  width: 100%;
+}
+
+.dashboard-header {
+  padding: 24px 30px;
+
+  border-bottom: 1px solid #e7eaed;
+}
+
+.dashboard-header h2 {
+  margin: 6px 0 5px;
+
+  color: #20262e;
+
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.dashboard-header p {
+  margin: 0;
+
+  color: #5f6874;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.selection-panel {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    auto;
+
+  align-items: end;
+
+  gap: 16px;
+
+  margin: 20px 30px 0;
+  padding: 18px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #fafbfc;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.input-group label {
+  color: #555e69;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.input-group select {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 11px;
+
+  border: 1px solid #dce1e6;
+  border-radius: 6px;
+
+  background: #ffffff;
+  color: #303841;
+
+  font-size: 13px;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.input-group select:hover:not(:disabled) {
+  border-color: #cbd2da;
+}
+
+.input-group select:focus {
+  border-color: #3566d6;
+
+  box-shadow:
+    0 0 0 3px rgba(53, 102, 214, 0.09);
+
+  outline: none;
+}
+
+.input-group select:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+
+  cursor: not-allowed;
+}
+
+.selection-panel .primary-button {
+  min-height: 42px;
+}
+
+.metrics-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin: 20px 30px 30px;
+}
+
+.metric-card {
+  min-height: 112px;
+
+  padding: 17px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #fafafa;
+}
+
+.metric-card h3 {
+  margin: 0 0 9px;
+
+  color: #6b7280;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.metric-card p {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.metric-card span {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+.metric-card.status-card {
+  background: #f8fafc;
+
+  border-color: #dbe4f0;
+}
+
+.metric-card.status-card p {
+  font-size: 15px;
+
+  text-transform: capitalize;
+}
+
+/* =========================================================
+   OPTIMIZATION STATES
+   ========================================================= */
+
+.optimization-message {
+  margin: 20px 30px 30px;
+
+  padding: 14px 16px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.optimization-message.error {
+  border: 1px solid #f0d1d1;
+
+  background: #fff6f6;
+  color: #a13d3d;
+}
+
+.optimization-message.info {
+  border: 1px solid #dce4ef;
+
+  background: #f7f9fc;
+  color: #566170;
+}
+
+.optimization-loading {
+  margin: 20px 30px 30px;
+
+  padding: 20px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  background: #fafbfc;
+
+  color: #68717d;
+
+  font-size: 13px;
+
+  text-align: center;
 }
 
 /* =========================================================
@@ -1052,7 +1482,19 @@ input:focus-visible {
   }
 
   .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .selection-panel {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1088,7 +1530,9 @@ input:focus-visible {
 
   .nav-item {
     width: auto;
+
     flex: 1 1 auto;
+
     justify-content: center;
   }
 
@@ -1105,6 +1549,7 @@ input:focus-visible {
 
   .topbar {
     flex-direction: column;
+
     margin-bottom: 24px;
   }
 
@@ -1122,11 +1567,24 @@ input:focus-visible {
 
   .section-header {
     min-height: auto;
+
     flex-direction: column;
+
     align-items: flex-start;
+
     gap: 14px;
 
     padding: 20px;
+  }
+
+  .section-actions {
+    width: 100%;
+
+    flex-wrap: wrap;
+  }
+
+  .section-actions button {
+    flex: 1;
   }
 
   .data-table {
@@ -1135,8 +1593,24 @@ input:focus-visible {
 
   .page-footer {
     flex-direction: column;
+
     align-items: flex-start;
+
     gap: 6px;
+  }
+
+  .selection-panel {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .metrics-grid {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .dashboard-header {
+    padding: 20px;
   }
 }
 
@@ -1162,151 +1636,35 @@ input:focus-visible {
   .modal-actions button {
     width: 100%;
   }
-}
-/* =========================================================
-   AI INVENTORY OPTIMIZATION DASHBOARD
-   ========================================================= */
 
-.dashboard-header {
-  margin-bottom: 20px;
-}
+  .api-alert {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-.dashboard-header h2 {
-  margin: 6px 0 4px;
-  font-size: 15px;
-  color: #1f2937;
-}
+  .api-alert button {
+    width: 100%;
+  }
 
-.dashboard-header p {
-  margin: 0;
-  font-size: 10px;
-  color: #6b7280;
-}
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
 
-.selection-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  align-items: end;
-  gap: 16px;
-
-  padding: 16px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fafbfc;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.input-group label {
-  color: #555e69;
-  font-size: 9px;
-  font-weight: 600;
-}
-
-.input-group select {
-  width: 100%;
-  height: 40px;
-
-  padding: 0 11px;
-
-  border: 1px solid #dce1e6;
-  border-radius: 6px;
-
-  background: #ffffff;
-  color: #303841;
-
-  font-size: 10px;
-
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.input-group select:hover:not(:disabled) {
-  border-color: #cbd2da;
-}
-
-.input-group select:focus {
-  border-color: #3566d6;
-  box-shadow: 0 0 0 3px rgba(53, 102, 214, 0.09);
-  outline: none;
-}
-
-.input-group select:disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.selection-panel .primary-button {
-  height: 40px;
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.metric-card {
-  padding: 16px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fafafa;
-}
-
-.metric-card h3 {
-  margin: 0 0 8px;
-  font-size: 9px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.metric-card p {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.metric-card span {
-  display: block;
-  margin-top: 4px;
-  font-size: 9px;
-  color: #9ca3af;
-}
-
-.metric-card.status-card {
-  background: #f8fafc;
-  border-color: #dbe4f0;
-}
-
-.metric-card.status-card p {
-  font-size: 14px;
-  text-transform: capitalize;
-}
-
-@media (max-width: 900px) {
   .selection-panel {
-    grid-template-columns: 1fr;
+    margin-left: 16px;
+    margin-right: 16px;
+
+    padding: 15px;
   }
 
   .metrics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 16px;
+    margin-right: 16px;
   }
-}
 
-@media (max-width: 600px) {
-  .metrics-grid {
-    grid-template-columns: 1fr;
+  .optimization-message,
+  .optimization-loading {
+    margin-left: 16px;
+    margin-right: 16px;
   }
 }

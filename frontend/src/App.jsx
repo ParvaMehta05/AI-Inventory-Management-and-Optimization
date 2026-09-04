@@ -13,19 +13,14 @@ function App() {
   const [inventory, setInventory] = useState([]);
 
   const [loading, setLoading] = useState(true);
-  const [backendConnected, setBackendConnected] =
-    useState(false);
+  const [backendConnected, setBackendConnected] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const [showProductForm, setShowProductForm] =
-    useState(false);
-  const [showWarehouseForm, setShowWarehouseForm] =
-    useState(false);
-  const [showInventoryForm, setShowInventoryForm] =
-    useState(false);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [showInventoryForm, setShowInventoryForm] = useState(false);
 
-  const [activeSection, setActiveSection] =
-    useState("Dashboard");
+  const [activeSection, setActiveSection] = useState("Dashboard");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -34,29 +29,27 @@ function App() {
     price: "",
   });
 
-  const [warehouseFormData, setWarehouseFormData] =
-    useState({
-      name: "",
-      location: "",
-    });
+  const [warehouseFormData, setWarehouseFormData] = useState({
+    name: "",
+    location: "",
+  });
 
-  const [inventoryFormData, setInventoryFormData] =
-    useState({
-      product_id: "",
-      warehouse_id: "",
-      quantity: "",
-    });
+  const [inventoryFormData, setInventoryFormData] = useState({
+    product_id: "",
+    warehouse_id: "",
+    quantity: "",
+  });
 
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
 
-  // ---------------- API ----------------
+  // =========================================================
+  // API
+  // =========================================================
 
   const fetchEndpoint = async (endpoint) => {
     try {
-      const response = await fetch(
-        `${API_URL}${endpoint}`
-      );
+      const response = await fetch(`${API_URL}${endpoint}`);
 
       if (!response.ok) {
         throw new Error(
@@ -71,10 +64,7 @@ function App() {
         data: Array.isArray(data) ? data : [],
       };
     } catch (error) {
-      console.error(
-        `API error for ${endpoint}:`,
-        error
-      );
+      console.error(`API error for ${endpoint}:`, error);
 
       return {
         success: false,
@@ -107,27 +97,21 @@ function App() {
       setProducts(productsResult.data);
       hasConnection = true;
     } else {
-      errors.push(
-        `Products: ${productsResult.error}`
-      );
+      errors.push(`Products: ${productsResult.error}`);
     }
 
     if (warehousesResult.success) {
       setWarehouses(warehousesResult.data);
       hasConnection = true;
     } else {
-      errors.push(
-        `Warehouses: ${warehousesResult.error}`
-      );
+      errors.push(`Warehouses: ${warehousesResult.error}`);
     }
 
     if (inventoryResult.success) {
       setInventory(inventoryResult.data);
       hasConnection = true;
     } else {
-      errors.push(
-        `Inventory: ${inventoryResult.error}`
-      );
+      errors.push(`Inventory: ${inventoryResult.error}`);
     }
 
     setBackendConnected(hasConnection);
@@ -147,7 +131,9 @@ function App() {
     fetchData();
   }, []);
 
-  // ---------------- INPUT HANDLERS ----------------
+  // =========================================================
+  // INPUT HANDLERS
+  // =========================================================
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -176,7 +162,9 @@ function App() {
     }));
   };
 
-  // ---------------- API ERROR ----------------
+  // =========================================================
+  // API ERROR MESSAGE
+  // =========================================================
 
   const getApiErrorMessage = async (
     response,
@@ -201,7 +189,9 @@ function App() {
     return errorMessage;
   };
 
-  // ---------------- PRODUCT ----------------
+  // =========================================================
+  // PRODUCT
+  // =========================================================
 
   const handleAddProduct = async (event) => {
     event.preventDefault();
@@ -215,35 +205,28 @@ function App() {
       !formData.category.trim() ||
       !formData.price
     ) {
-      setFormError(
-        "Please fill in all product fields."
-      );
+      setFormError("Please fill in all product fields.");
       return;
     }
 
     if (Number(formData.price) < 0) {
-      setFormError(
-        "Price cannot be negative."
-      );
+      setFormError("Price cannot be negative.");
       return;
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/products/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            sku: formData.sku.trim(),
-            category: formData.category.trim(),
-            price: Number(formData.price),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/products/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          sku: formData.sku.trim(),
+          category: formData.category.trim(),
+          price: Number(formData.price),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -254,9 +237,7 @@ function App() {
         );
       }
 
-      setFormMessage(
-        "Product added successfully."
-      );
+      setFormMessage("Product added successfully.");
 
       setFormData({
         name: "",
@@ -272,10 +253,7 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error(
-        "Add product error:",
-        error
-      );
+      console.error("Add product error:", error);
 
       setFormError(
         error.message ||
@@ -284,7 +262,9 @@ function App() {
     }
   };
 
-  // ---------------- WAREHOUSE ----------------
+  // =========================================================
+  // WAREHOUSE
+  // =========================================================
 
   const handleAddWarehouse = async (event) => {
     event.preventDefault();
@@ -303,20 +283,16 @@ function App() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/warehouses/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: warehouseFormData.name.trim(),
-            location:
-              warehouseFormData.location.trim(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/warehouses/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: warehouseFormData.name.trim(),
+          location: warehouseFormData.location.trim(),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -327,9 +303,7 @@ function App() {
         );
       }
 
-      setFormMessage(
-        "Warehouse added successfully."
-      );
+      setFormMessage("Warehouse added successfully.");
 
       setWarehouseFormData({
         name: "",
@@ -343,10 +317,7 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error(
-        "Add warehouse error:",
-        error
-      );
+      console.error("Add warehouse error:", error);
 
       setFormError(
         error.message ||
@@ -355,7 +326,9 @@ function App() {
     }
   };
 
-  // ---------------- INVENTORY ----------------
+  // =========================================================
+  // INVENTORY
+  // =========================================================
 
   const handleAddInventory = async (event) => {
     event.preventDefault();
@@ -374,36 +347,29 @@ function App() {
       return;
     }
 
-    if (
-      Number(inventoryFormData.quantity) < 0
-    ) {
-      setFormError(
-        "Quantity cannot be negative."
-      );
+    if (Number(inventoryFormData.quantity) < 0) {
+      setFormError("Quantity cannot be negative.");
       return;
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/inventory/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            product_id: Number(
-              inventoryFormData.product_id
-            ),
-            warehouse_id: Number(
-              inventoryFormData.warehouse_id
-            ),
-            quantity: Number(
-              inventoryFormData.quantity
-            ),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/inventory/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: Number(
+            inventoryFormData.product_id
+          ),
+          warehouse_id: Number(
+            inventoryFormData.warehouse_id
+          ),
+          quantity: Number(
+            inventoryFormData.quantity
+          ),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -414,9 +380,7 @@ function App() {
         );
       }
 
-      setFormMessage(
-        "Inventory added successfully."
-      );
+      setFormMessage("Inventory added successfully.");
 
       setInventoryFormData({
         product_id: "",
@@ -431,10 +395,7 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error(
-        "Add inventory error:",
-        error
-      );
+      console.error("Add inventory error:", error);
 
       setFormError(
         error.message ||
@@ -443,7 +404,9 @@ function App() {
     }
   };
 
-  // ---------------- CLOSE FORMS ----------------
+  // =========================================================
+  // CLOSE FORMS
+  // =========================================================
 
   const closeProductForm = () => {
     setShowProductForm(false);
@@ -484,7 +447,9 @@ function App() {
     setFormError("");
   };
 
-  // ---------------- OPEN FORMS ----------------
+  // =========================================================
+  // OPEN FORMS
+  // =========================================================
 
   const openProductForm = () => {
     setFormMessage("");
@@ -504,7 +469,9 @@ function App() {
     setShowInventoryForm(true);
   };
 
-  // ---------------- DASHBOARD DATA ----------------
+  // =========================================================
+  // DASHBOARD DATA
+  // =========================================================
 
   const totalStock = inventory.reduce(
     (total, item) =>
@@ -517,7 +484,9 @@ function App() {
       Number(item.quantity || 0) <= 10
   );
 
-  // ---------------- NAVIGATION ----------------
+  // =========================================================
+  // NAVIGATION
+  // =========================================================
 
   const handleNavigation = (section) => {
     setActiveSection(section);
@@ -542,7 +511,9 @@ function App() {
     }
   };
 
-  // ---------------- UI ----------------
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
     <div className="app-shell">
@@ -550,15 +521,11 @@ function App() {
 
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">
-            AI
-          </div>
+          <div className="brand-mark">AI</div>
 
           <div>
             <h1>Inventory</h1>
-            <span>
-              Management System
-            </span>
+            <span>Management System</span>
           </div>
         </div>
 
@@ -664,10 +631,7 @@ function App() {
         {apiError && (
           <div className="api-alert">
             <div>
-              <strong>
-                API Notice
-              </strong>
-
+              <strong>API Notice</strong>
               <p>{apiError}</p>
             </div>
 
@@ -1077,12 +1041,7 @@ function App() {
                         </td>
 
                         <td>
-                          <div
-                            style={{
-                              display: "grid",
-                              gap: "4px",
-                            }}
-                          >
+                          <div className="table-cell-stack">
                             <span className="table-primary">
                               {product?.name ||
                                 "Unknown product"}
@@ -1090,9 +1049,7 @@ function App() {
 
                             <span className="table-secondary">
                               ID: #
-                              {
-                                item.product_id
-                              }
+                              {item.product_id}
 
                               {product?.sku
                                 ? ` • SKU: ${product.sku}`
@@ -1102,12 +1059,7 @@ function App() {
                         </td>
 
                         <td>
-                          <div
-                            style={{
-                              display: "grid",
-                              gap: "4px",
-                            }}
-                          >
+                          <div className="table-cell-stack">
                             <span className="table-primary">
                               {warehouse?.name ||
                                 "Unknown warehouse"}
@@ -1115,9 +1067,7 @@ function App() {
 
                             <span className="table-secondary">
                               ID: #
-                              {
-                                item.warehouse_id
-                              }
+                              {item.warehouse_id}
 
                               {warehouse?.location
                                 ? ` • ${warehouse.location}`
@@ -1193,7 +1143,7 @@ function App() {
             </div>
           ) : (
             <div className="table-wrapper">
-              <table className="data-table">
+              <table className="data-table stock-alert-table">
                 <thead>
                   <tr>
                     <th>PRODUCT</th>
@@ -1258,7 +1208,7 @@ function App() {
                           </td>
 
                           <td>
-                            <span className="category-badge">
+                            <span className="alert-status-badge">
                               LOW STOCK
                             </span>
                           </td>
@@ -1285,7 +1235,9 @@ function App() {
         </footer>
       </main>
 
-      {/* ADD PRODUCT MODAL */}
+      {/* =====================================================
+          ADD PRODUCT MODAL
+          ===================================================== */}
 
       {showProductForm && (
         <div
@@ -1304,9 +1256,7 @@ function App() {
                   PRODUCT CATALOG
                 </span>
 
-                <h3>
-                  Add Product
-                </h3>
+                <h3>Add Product</h3>
 
                 <p>
                   Enter the basic details
@@ -1436,7 +1386,9 @@ function App() {
         </div>
       )}
 
-      {/* ADD WAREHOUSE MODAL */}
+      {/* =====================================================
+          ADD WAREHOUSE MODAL
+          ===================================================== */}
 
       {showWarehouseForm && (
         <div
@@ -1455,9 +1407,7 @@ function App() {
                   STORAGE LOCATIONS
                 </span>
 
-                <h3>
-                  Add Warehouse
-                </h3>
+                <h3>Add Warehouse</h3>
 
                 <p>
                   Add a new warehouse or
@@ -1555,7 +1505,9 @@ function App() {
         </div>
       )}
 
-      {/* ADD INVENTORY MODAL */}
+      {/* =====================================================
+          ADD INVENTORY MODAL
+          ===================================================== */}
 
       {showInventoryForm && (
         <div
@@ -1574,9 +1526,7 @@ function App() {
                   STOCK MANAGEMENT
                 </span>
 
-                <h3>
-                  Add Inventory
-                </h3>
+                <h3>Add Inventory</h3>
 
                 <p>
                   Assign stock to a product
