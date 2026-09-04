@@ -9,8 +9,6 @@ from app.models.warehouse import Warehouse
 from app.models.sale import Sale
 
 
-# Base daily demand for known products.
-# If a product is not listed here, 20 units/day will be used.
 BASE_DEMAND = {
     "keyboard": 15,
     "mouse": 30,
@@ -23,7 +21,6 @@ BASE_DEMAND = {
 
 def get_base_demand(product: Product) -> int:
     name = (product.name or "").strip().lower()
-
     return BASE_DEMAND.get(name, 20)
 
 
@@ -31,17 +28,8 @@ def generate_sales():
     db: Session = SessionLocal()
 
     try:
-        products = (
-            db.query(Product)
-            .order_by(Product.id)
-            .all()
-        )
-
-        warehouses = (
-            db.query(Warehouse)
-            .order_by(Warehouse.id)
-            .all()
-        )
+        products = db.query(Product).order_by(Product.id).all()
+        warehouses = db.query(Warehouse).order_by(Warehouse.id).all()
 
         if not products:
             print("No products found.")
@@ -51,61 +39,67 @@ def generate_sales():
             print("No warehouses found.")
             return
 
-        # Generate 90 days of historical sales.
+        # Generate 90 days of history
         start_date = date.today() - timedelta(days=90)
 
-        inserted_records = 0
-        skipped_records = 0
+        # -------------------------------------------------
+        # LOAD ALL EXISTING SALES ONCE
+        # -------------------------------------------------
+
+        existing_sales = db.query(
+            Sale.product_id,
+            Sale.warehouse_id,
+            Sale.sale_date
+        ).all()
+
+        existing_keys = {
+            (
+                sale.product_id,
+                sale.warehouse_id,
+                sale.sale_date
+            )
+            for sale in existing_sales
+        }
+
+        new_sales = []
+
+        # -------------------------------------------------
+        # GENERATE SALES
+        # -------------------------------------------------
 
         for warehouse in warehouses:
+
+            warehouse_factor = 0.90 + (warehouse.id % 5) * 0.05
+
             for product in products:
 
                 base_demand = get_base_demand(product)
 
-                for day_number in range(90):
+                for day_number in range(91):
+
                     current_date = (
-                        start_date
-                        + timedelta(days=day_number)
+                        start_date + timedelta(days=day_number)
                     )
 
-                    # Prevent duplicate sales records.
-                    existing_sale = (
-                        db.query(Sale)
-                        .filter(
-                            Sale.product_id == product.id,
-                            Sale.warehouse_id == warehouse.id,
-                            Sale.sale_date == current_date,
-                        )
-                        .first()
+                    key = (
+                        product.id,
+                        warehouse.id,
+                        current_date
                     )
 
-                    if existing_sale:
-                        skipped_records += 1
+                    # Skip already existing record
+                    if key in existing_keys:
                         continue
 
-                    # Gradual demand growth.
-                    trend = 1 + (
-                        day_number / 90
-                    ) * 0.15
+                    trend = 1 + (day_number / 90) * 0.15
 
-                    # Lower demand on weekends.
-                    if current_date.weekday() >= 5:
-                        weekend_factor = 0.80
-                    else:
-                        weekend_factor = 1.0
-
-                    # Small warehouse-specific variation.
-                    # Keeps demand different across warehouses.
-                    warehouse_factor = (
-                        0.90
-                        + (warehouse.id % 5) * 0.05
+                    weekend_factor = (
+                        0.80
+                        if current_date.weekday() >= 5
+                        else 1.0
                     )
 
-                    # Random variation.
-                    random_factor = random.uniform(
-                        0.80,
-                        1.20,
-                    )
+                    random_factor = random.uniform(0.80, 1.20)
 
                     quantity = int(
                         base_demand
@@ -117,25 +111,30 @@ def generate_sales():
 
                     quantity = max(quantity, 1)
 
-                    sale = Sale(
-                        product_id=product.id,
-                        warehouse_id=warehouse.id,
-                        sale_date=current_date,
-                        quantity=quantity,
+                    new_sales.append(
+                        Sale(
+                            product_id=product.id,
+                            warehouse_id=warehouse.id,
+                            sale_date=current_date,
+                            quantity=quantity,
+                        )
                     )
 
-                    db.add(sale)
-                    inserted_records += 1
+        # -------------------------------------------------
+        # INSERT ALL RECORDS IN BULK
+        # -------------------------------------------------
 
-        db.commit()
+        if new_sales:
+            db.add_all(new_sales)
+            db.commit()
 
         print(
-            f"Successfully inserted "
-            f"{inserted_records} sales records."
+            f"Successfully inserted {len(new_sales)} sales records."
         )
 
         print(
-            f"Skipped {skipped_records} existing records."
+            f"Existing records skipped: "
+            f"{len(existing_sales)}"
         )
 
         print(
@@ -149,6 +148,7 @@ def generate_sales():
     except Exception as error:
         db.rollback()
         print("Error generating sales:", error)
+        raise
 
     finally:
         db.close()

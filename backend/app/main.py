@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import FastAPI, Depends, BackgroundTasks
 from app.core.security import get_current_user
 
 from app.database.database import Base, engine
@@ -101,29 +101,19 @@ def health():
 # ---------------------------------------------------------
 # TEMPORARY SALES SEED
 # ---------------------------------------------------------
-
 @app.post("/seed-sales")
-def seed_sales():
+def seed_sales(background_tasks: BackgroundTasks):
     """
-    Temporary endpoint used to generate historical sales data
+    Temporarily generates historical sales data
     for ML demand prediction.
-
-    Remove this endpoint after production data has been seeded.
     """
-    try:
-        generate_sales()
 
-        return {
-            "success": True,
-            "message": "Historical sales generation completed."
-        }
+    background_tasks.add_task(generate_sales)
 
-    except Exception as error:
-        return {
-            "success": False,
-            "message": "Historical sales generation failed.",
-            "error": str(error),
-        }
+    return {
+        "success": True,
+        "message": "Historical sales generation started."
+    }
 
 
 # ---------------------------------------------------------
