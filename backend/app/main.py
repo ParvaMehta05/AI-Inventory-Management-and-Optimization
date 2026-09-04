@@ -2,7 +2,6 @@ import os
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Depends, BackgroundTasks
 from app.core.security import get_current_user
 
 from app.database.database import Base, engine
@@ -22,7 +21,6 @@ from app.routes.order import router as order_router
 from app.routes.webhooks import router as webhooks_router
 from app.routes.optimization import router as optimization_router
 
-from ml.generate_sales import generate_sales
 
 
 Base.metadata.create_all(bind=engine)
@@ -96,25 +94,6 @@ def health():
     return {
         "status": "healthy"
     }
-
-
-# ---------------------------------------------------------
-# TEMPORARY SALES SEED
-# ---------------------------------------------------------
-@app.post("/seed-sales")
-def seed_sales(background_tasks: BackgroundTasks):
-    """
-    Temporarily generates historical sales data
-    for ML demand prediction.
-    """
-
-    background_tasks.add_task(generate_sales)
-
-    return {
-        "success": True,
-        "message": "Historical sales generation started."
-    }
-
 
 # ---------------------------------------------------------
 # CURRENT USER
