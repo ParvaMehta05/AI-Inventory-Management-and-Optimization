@@ -3,14 +3,14 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard";
 
 const API_URL = (
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+  import.meta.env.VITE_API_URL ||
+  "https://ai-inventory-management-and-optimization.onrender.com"
 ).replace(/\/$/, "");
 
 function App() {
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [inventory, setInventory] = useState([]);
-  const [orders, setOrders] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [backendConnected, setBackendConnected] = useState(false);
@@ -19,7 +19,6 @@ function App() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
-  const [showOrderForm, setShowOrderForm] = useState(false);
 
   const [activeSection, setActiveSection] = useState("Dashboard");
 
@@ -41,14 +40,10 @@ function App() {
     quantity: "",
   });
 
-  const [orderFormData, setOrderFormData] = useState({
-    product_id: "",
-    warehouse_id: "",
-    quantity: "",
-  });
-
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
+
+  // ---------------- API ----------------
 
   const fetchEndpoint = async (endpoint) => {
     try {
@@ -85,14 +80,12 @@ function App() {
       fetchEndpoint("/products/"),
       fetchEndpoint("/warehouses/"),
       fetchEndpoint("/inventory/"),
-      fetchEndpoint("/orders/"),
     ]);
 
     const [
       productsResult,
       warehousesResult,
       inventoryResult,
-      ordersResult,
     ] = results;
 
     let hasConnection = false;
@@ -119,13 +112,6 @@ function App() {
       errors.push(`Inventory: ${inventoryResult.error}`);
     }
 
-    if (ordersResult.success) {
-      setOrders(ordersResult.data);
-      hasConnection = true;
-    } else {
-      errors.push(`Orders: ${ordersResult.error}`);
-    }
-
     setBackendConnected(hasConnection);
 
     if (!hasConnection) {
@@ -142,6 +128,8 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // ---------------- INPUT HANDLERS ----------------
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -165,15 +153,6 @@ function App() {
     const { name, value } = event.target;
 
     setInventoryFormData((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  };
-
-  const handleOrderInputChange = (event) => {
-    const { name, value } = event.target;
-
-    setOrderFormData((current) => ({
       ...current,
       [name]: value,
     }));
@@ -388,96 +367,6 @@ function App() {
     }
   };
 
-  // ---------------- ORDER ----------------
-
-  const handleAddOrder = async (event) => {
-    event.preventDefault();
-
-    setFormMessage("");
-    setFormError("");
-
-    if (
-      !orderFormData.product_id ||
-      !orderFormData.warehouse_id ||
-      orderFormData.quantity === ""
-    ) {
-      setFormError(
-        "Please select a product, warehouse and enter an order quantity."
-      );
-      return;
-    }
-
-    if (Number(orderFormData.quantity) <= 0) {
-      setFormError("Order quantity must be greater than 0.");
-      return;
-    }
-
-    const selectedProductId = Number(orderFormData.product_id);
-    const selectedWarehouseId = Number(orderFormData.warehouse_id);
-    const requestedQuantity = Number(orderFormData.quantity);
-
-    const matchingInventory = inventory.find(
-      (item) =>
-        Number(item.product_id) === selectedProductId &&
-        Number(item.warehouse_id) === selectedWarehouseId
-    );
-
-    if (!matchingInventory) {
-      setFormError(
-        "No inventory record exists for this product and warehouse."
-      );
-      return;
-    }
-
-    if (requestedQuantity > Number(matchingInventory.quantity)) {
-      setFormError(
-        `Not enough stock. Available quantity: ${matchingInventory.quantity}.`
-      );
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/orders/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: selectedProductId,
-          warehouse_id: selectedWarehouseId,
-          quantity: requestedQuantity,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          await getApiErrorMessage(response, "Unable to place order.")
-        );
-      }
-
-      setFormMessage("Order placed successfully.");
-
-      setOrderFormData({
-        product_id: "",
-        warehouse_id: "",
-        quantity: "",
-      });
-
-      await fetchData();
-
-      setTimeout(() => {
-        setShowOrderForm(false);
-        setFormMessage("");
-      }, 900);
-    } catch (error) {
-      console.error("Add order error:", error);
-
-      setFormError(
-        error.message || "Unable to place order. Please try again."
-      );
-    }
-  };
-
   // ---------------- CLOSE FORMS ----------------
 
   const closeProductForm = () => {
@@ -519,19 +408,6 @@ function App() {
     setFormError("");
   };
 
-  const closeOrderForm = () => {
-    setShowOrderForm(false);
-
-    setOrderFormData({
-      product_id: "",
-      warehouse_id: "",
-      quantity: "",
-    });
-
-    setFormMessage("");
-    setFormError("");
-  };
-
   // ---------------- OPEN FORMS ----------------
 
   const openProductForm = () => {
@@ -552,12 +428,6 @@ function App() {
     setShowInventoryForm(true);
   };
 
-  const openOrderForm = () => {
-    setFormMessage("");
-    setFormError("");
-    setShowOrderForm(true);
-  };
-
   // ---------------- DASHBOARD DATA ----------------
 
   const totalStock = inventory.reduce(
@@ -569,6 +439,8 @@ function App() {
     (item) => Number(item.quantity || 0) <= 10
   );
 
+  // ---------------- NAVIGATION ----------------
+
   const handleNavigation = (section) => {
     setActiveSection(section);
 
@@ -577,7 +449,7 @@ function App() {
       Products: "products",
       Warehouses: "warehouses",
       Inventory: "inventory",
-      Orders: "orders",
+      Optimization: "optimization",
     };
 
     const element = document.getElementById(sectionIds[section]);
@@ -589,6 +461,8 @@ function App() {
       });
     }
   };
+
+  // ---------------- UI ----------------
 
   return (
     <div className="app-shell">
@@ -610,7 +484,7 @@ function App() {
             "Products",
             "Warehouses",
             "Inventory",
-            "Orders",
+            "Optimization",
           ].map((item) => (
             <button
               key={item}
@@ -624,7 +498,7 @@ function App() {
                 {item === "Products" && "□"}
                 {item === "Warehouses" && "⌂"}
                 {item === "Inventory" && "≡"}
-                {item === "Orders" && "↗"}
+                {item === "Optimization" && "✦"}
               </span>
 
               <span>{item}</span>
@@ -661,12 +535,16 @@ function App() {
             <h2>Inventory Overview</h2>
 
             <p>
-              Keep track of your products, warehouses, orders and stock.
+              Manage products, warehouses, stock and AI-powered inventory
+              optimization.
             </p>
           </div>
 
           <div className="topbar-actions">
-            <button className="secondary-button" onClick={fetchData}>
+            <button
+              className="secondary-button"
+              onClick={fetchData}
+            >
               ↻ Refresh
             </button>
           </div>
@@ -682,6 +560,8 @@ function App() {
             <button onClick={fetchData}>Retry</button>
           </div>
         )}
+
+        {/* ---------------- STATS ---------------- */}
 
         <section className="stats-grid">
           <div className="stat-card">
@@ -725,13 +605,15 @@ function App() {
           </div>
         </section>
 
-        
-        {/* PRODUCTS */}
+        {/* ---------------- PRODUCTS ---------------- */}
+
         <section className="content-card" id="products">
           <div className="section-header">
             <div>
               <span className="section-kicker">CATALOG</span>
+
               <h3>Products</h3>
+
               <p>Your current product catalog.</p>
             </div>
 
@@ -751,7 +633,9 @@ function App() {
           ) : products.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">□</div>
+
               <h4>No products yet</h4>
+
               <p>Add your first product to get started.</p>
             </div>
           ) : (
@@ -815,11 +699,15 @@ function App() {
           )}
         </section>
 
+        {/* ---------------- WAREHOUSES ---------------- */}
+
         <section className="content-card" id="warehouses">
           <div className="section-header">
             <div>
               <span className="section-kicker">LOCATIONS</span>
+
               <h3>Warehouses</h3>
+
               <p>Storage locations connected to the system.</p>
             </div>
 
@@ -839,6 +727,7 @@ function App() {
           ) : warehouses.length === 0 ? (
             <div className="empty-state compact">
               <h4>No warehouses found</h4>
+
               <p>Add your first warehouse to get started.</p>
             </div>
           ) : (
@@ -886,12 +775,18 @@ function App() {
           )}
         </section>
 
+        {/* ---------------- INVENTORY ---------------- */}
+
         <section className="content-card" id="inventory">
           <div className="section-header inventory-header">
             <div>
               <span className="section-kicker">STOCK</span>
+
               <h3>Inventory</h3>
-              <p>Current stock across your warehouse locations.</p>
+
+              <p>
+                Current stock across your warehouse locations.
+              </p>
             </div>
 
             <div className="section-actions">
@@ -914,12 +809,15 @@ function App() {
           {loading ? (
             <div className="empty-state compact">
               <h4>Loading inventory...</h4>
+
               <p>Reading current stock levels.</p>
             </div>
           ) : inventory.length === 0 ? (
             <div className="empty-state compact">
               <div className="empty-icon">≡</div>
+
               <h4>No inventory records</h4>
+
               <p>
                 Add inventory by selecting a product and warehouse.
               </p>
@@ -946,10 +844,13 @@ function App() {
                 <tbody>
                   {inventory.map((item) => {
                     const product = products.find(
-                      (entry) => Number(entry.id) === Number(item.product_id)
+                      (entry) =>
+                        Number(entry.id) === Number(item.product_id)
                     );
+
                     const warehouse = warehouses.find(
-                      (entry) => Number(entry.id) === Number(item.warehouse_id)
+                      (entry) =>
+                        Number(entry.id) === Number(item.warehouse_id)
                     );
 
                     return (
@@ -961,22 +862,37 @@ function App() {
                         </td>
 
                         <td>
-                          <div style={{ display: "grid", gap: "4px" }}>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: "4px",
+                            }}
+                          >
                             <span className="table-primary">
                               {product?.name || "Unknown product"}
                             </span>
+
                             <span className="table-secondary">
                               ID: #{item.product_id}
-                              {product?.sku ? ` • SKU: ${product.sku}` : ""}
+                              {product?.sku
+                                ? ` • SKU: ${product.sku}`
+                                : ""}
                             </span>
                           </div>
                         </td>
 
                         <td>
-                          <div style={{ display: "grid", gap: "4px" }}>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: "4px",
+                            }}
+                          >
                             <span className="table-primary">
-                              {warehouse?.name || "Unknown warehouse"}
+                              {warehouse?.name ||
+                                "Unknown warehouse"}
                             </span>
+
                             <span className="table-secondary">
                               ID: #{item.warehouse_id}
                               {warehouse?.location
@@ -1006,106 +922,24 @@ function App() {
           )}
         </section>
 
-        
-        {/* AI INVENTORY OPTIMIZATION */}
+        {/* ---------------- AI OPTIMIZATION ---------------- */}
+
         <section className="content-card" id="optimization">
-          <Dashboard products={products} warehouses={warehouses} />
+          <Dashboard
+            products={products}
+            warehouses={warehouses}
+          />
         </section>
-        
-        {/* ORDERS */}
-        <section className="content-card" id="orders">
-          <div className="section-header">
-            <div>
-              <span className="section-kicker">SALES</span>
-              <h3>Orders</h3>
-              <p>Recent orders processed through the system.</p>
-            </div>
 
-            <button
-              className="secondary-button"
-              onClick={openOrderForm}
-            >
-              + Add Order
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="empty-state compact">
-              <h4>Loading orders...</h4>
-              <p>Checking recent order activity.</p>
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="empty-state compact">
-              <div className="empty-icon">↗</div>
-              <h4>No orders yet</h4>
-              <p>Completed orders will appear here.</p>
-            </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="data-table orders-table">
-                <colgroup>
-                  <col style={{ width: "12%" }} />
-                  <col style={{ width: "20%" }} />
-                  <col style={{ width: "20%" }} />
-                  <col style={{ width: "18%" }} />
-                  <col style={{ width: "30%" }} />
-                </colgroup>
-
-                <thead>
-                  <tr>
-                    <th>ORDER</th>
-                    <th>PRODUCT ID</th>
-                    <th>WAREHOUSE ID</th>
-                    <th>QUANTITY</th>
-                    <th>STATUS</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {orders.map((order) => (
-                    <tr key={order.id}>
-                      <td>
-                        <span className="muted-text">
-                          #{order.id}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="table-secondary">
-                          #{order.product_id}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="table-secondary">
-                          #{order.warehouse_id}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="quantity-badge">
-                          {order.quantity}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="category-badge">
-                          {order.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        {/* ---------------- STOCK ALERTS ---------------- */}
 
         <section className="content-card">
           <div className="section-header">
             <div>
               <span className="section-kicker">ATTENTION</span>
+
               <h3>Stock Alerts</h3>
+
               <p>Items that may need attention soon.</p>
             </div>
           </div>
@@ -1113,56 +947,122 @@ function App() {
           {lowStockItems.length === 0 ? (
             <div className="empty-state compact">
               <h4>Everything looks good</h4>
+
               <p>
-                No inventory records are currently below the low-stock
-                threshold.
+                No inventory records are currently below the
+                low-stock threshold.
               </p>
             </div>
           ) : (
-            <div className="alert-list">
-              {lowStockItems.map((item) => {
-  const product = products.find(
-    (entry) => Number(entry.id) === Number(item.product_id)
-  );
+            <div className="table-wrapper">
+              <table className="data-table">
+                <colgroup>
+                  <col style={{ width: "30%" }} />
+                  <col style={{ width: "30%" }} />
+                  <col style={{ width: "20%" }} />
+                  <col style={{ width: "20%" }} />
+                </colgroup>
 
-  const warehouse = warehouses.find(
-    (entry) => Number(entry.id) === Number(item.warehouse_id)
-  );
+                <thead>
+                  <tr>
+                    <th>PRODUCT</th>
+                    <th>WAREHOUSE</th>
+                    <th>CURRENT STOCK</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
 
-  return (
-    <div className="stock-alert" key={item.id}>
-      <div>
-        <strong>
-          {product?.name || `Product #${item.product_id}`}
-        </strong>
+                <tbody>
+                  {lowStockItems.map((item) => {
+                    const product = products.find(
+                      (entry) =>
+                        Number(entry.id) === Number(item.product_id)
+                    );
 
-        <span>
-          Product #{item.product_id} ·{" "}
-          {warehouse?.name || `Warehouse #${item.warehouse_id}`}
-          {warehouse?.name ? ` (#${item.warehouse_id})` : ""}
-        </span>
-      </div>
+                    const warehouse = warehouses.find(
+                      (entry) =>
+                        Number(entry.id) === Number(item.warehouse_id)
+                    );
 
-      <span className="low-stock-value">
-        {item.quantity}{" "}
-        {Number(item.quantity) === 1 ? "unit" : "units"}
-      </span>
-    </div>
-  );
-})}
+                    const quantity = Number(item.quantity || 0);
+
+                    return (
+                      <tr key={item.id}>
+                        <td>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: "4px",
+                            }}
+                          >
+                            <span className="table-primary">
+                              {product?.name ||
+                                `Product #${item.product_id}`}
+                            </span>
+
+                            <span className="table-secondary">
+                              SKU: {product?.sku || "—"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: "4px",
+                            }}
+                          >
+                            <span className="table-primary">
+                              {warehouse?.name ||
+                                `Warehouse #${item.warehouse_id}`}
+                            </span>
+
+                            <span className="table-secondary">
+                              {warehouse?.location || "Location unavailable"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="quantity-badge low-stock">
+                            {quantity}{" "}
+                            {quantity === 1 ? "unit" : "units"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="category-badge">
+                            LOW STOCK
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
-           
+
+        {/* ---------------- FOOTER ---------------- */}
+
         <footer className="page-footer">
           <span>AI Inventory Management</span>
-          <span>Inventory optimization dashboard</span>
+
+          <span>
+            Multichannel inventory synchronization & optimization
+          </span>
         </footer>
       </main>
 
-      {/* ADD PRODUCT MODAL */}
+      {/* ---------------- ADD PRODUCT MODAL ---------------- */}
+
       {showProductForm && (
-        <div className="modal-overlay" onClick={closeProductForm}>
+        <div
+          className="modal-overlay"
+          onClick={closeProductForm}
+        >
           <div
             className="modal"
             onClick={(event) => event.stopPropagation()}
@@ -1280,9 +1180,13 @@ function App() {
         </div>
       )}
 
-      {/* ADD WAREHOUSE MODAL */}
+      {/* ---------------- ADD WAREHOUSE MODAL ---------------- */}
+
       {showWarehouseForm && (
-        <div className="modal-overlay" onClick={closeWarehouseForm}>
+        <div
+          className="modal-overlay"
+          onClick={closeWarehouseForm}
+        >
           <div
             className="modal"
             onClick={(event) => event.stopPropagation()}
@@ -1375,10 +1279,14 @@ function App() {
           </div>
         </div>
       )}
- 
-      {/* ADD INVENTORY MODAL */}
+
+      {/* ---------------- ADD INVENTORY MODAL ---------------- */}
+
       {showInventoryForm && (
-        <div className="modal-overlay" onClick={closeInventoryForm}>
+        <div
+          className="modal-overlay"
+          onClick={closeInventoryForm}
+        >
           <div
             className="modal"
             onClick={(event) => event.stopPropagation()}
@@ -1428,12 +1336,14 @@ function App() {
                         value={product.id}
                       >
                         #{product.id} — {product.name}
-                        {product.sku ? ` — ${product.sku}` : ""}
+                        {product.sku
+                          ? ` — ${product.sku}`
+                          : ""}
                       </option>
                     ))}
                   </select>
 
-                  {inventoryFormData.product_id && (
+                  {inventoryFormData.product_id &&
                     (() => {
                       const selectedProduct = products.find(
                         (product) =>
@@ -1464,6 +1374,7 @@ function App() {
                           >
                             Selected Product
                           </div>
+
                           <div
                             style={{
                               marginTop: "4px",
@@ -1471,8 +1382,10 @@ function App() {
                               color: "#1f2937",
                             }}
                           >
-                            #{selectedProduct.id} — {selectedProduct.name}
+                            #{selectedProduct.id} —{" "}
+                            {selectedProduct.name}
                           </div>
+
                           <div
                             style={{
                               marginTop: "3px",
@@ -1484,8 +1397,7 @@ function App() {
                           </div>
                         </div>
                       );
-                    })()
-                  )}
+                    })()}
                 </div>
 
                 <div className="form-group full">
@@ -1509,17 +1421,21 @@ function App() {
                         value={warehouse.id}
                       >
                         #{warehouse.id} — {warehouse.name}
-                        {warehouse.location ? ` — ${warehouse.location}` : ""}
+                        {warehouse.location
+                          ? ` — ${warehouse.location}`
+                          : ""}
                       </option>
                     ))}
                   </select>
 
-                  {inventoryFormData.warehouse_id && (
+                  {inventoryFormData.warehouse_id &&
                     (() => {
                       const selectedWarehouse = warehouses.find(
                         (warehouse) =>
                           Number(warehouse.id) ===
-                          Number(inventoryFormData.warehouse_id)
+                          Number(
+                            inventoryFormData.warehouse_id
+                          )
                       );
 
                       if (!selectedWarehouse) return null;
@@ -1545,6 +1461,7 @@ function App() {
                           >
                             Selected Warehouse
                           </div>
+
                           <div
                             style={{
                               marginTop: "4px",
@@ -1552,8 +1469,10 @@ function App() {
                               color: "#1f2937",
                             }}
                           >
-                            #{selectedWarehouse.id} — {selectedWarehouse.name}
+                            #{selectedWarehouse.id} —{" "}
+                            {selectedWarehouse.name}
                           </div>
+
                           <div
                             style={{
                               marginTop: "3px",
@@ -1561,12 +1480,12 @@ function App() {
                               color: "#64748b",
                             }}
                           >
-                            Location: {selectedWarehouse.location || "—"}
+                            Location:{" "}
+                            {selectedWarehouse.location || "—"}
                           </div>
                         </div>
                       );
-                    })()
-                  )}
+                    })()}
                 </div>
 
                 <div className="form-group full">
@@ -1619,144 +1538,8 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* ADD ORDER MODAL */}
-      {showOrderForm && (
-        <div className="modal-overlay" onClick={closeOrderForm}>
-          <div
-            className="modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="modal-header">
-              <div>
-                <span className="section-kicker">
-                  ORDER PROCESSING
-                </span>
-
-                <h3>Place Order</h3>
-
-                <p>
-                  Select the product, warehouse and quantity for
-                  this order.
-                </p>
-              </div>
-
-              <button
-                className="modal-close"
-                onClick={closeOrderForm}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleAddOrder}>
-              <div className="form-grid">
-                <div className="form-group full">
-                  <label htmlFor="order-product">
-                    Product
-                  </label>
-
-                  <select
-                    id="order-product"
-                    name="product_id"
-                    value={orderFormData.product_id}
-                    onChange={handleOrderInputChange}
-                  >
-                    <option value="">
-                      Select a product
-                    </option>
-
-                    {products.map((product) => (
-                      <option
-                        key={product.id}
-                        value={product.id}
-                      >
-                        {product.name} — {product.sku}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group full">
-                  <label htmlFor="order-warehouse">
-                    Warehouse
-                  </label>
-
-                  <select
-                    id="order-warehouse"
-                    name="warehouse_id"
-                    value={orderFormData.warehouse_id}
-                    onChange={handleOrderInputChange}
-                  >
-                    <option value="">
-                      Select a warehouse
-                    </option>
-
-                    {warehouses.map((warehouse) => (
-                      <option
-                        key={warehouse.id}
-                        value={warehouse.id}
-                      >
-                        {warehouse.name} — {warehouse.location}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group full">
-                  <label htmlFor="order-quantity">
-                    Order Quantity
-                  </label>
-
-                  <input
-                    id="order-quantity"
-                    name="quantity"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={orderFormData.quantity}
-                    onChange={handleOrderInputChange}
-                    placeholder="e.g. 20"
-                  />
-                </div>
-              </div>
-
-              {formError && (
-                <div className="form-message error">
-                  {formError}
-                </div>
-              )}
-
-              {formMessage && (
-                <div className="form-message success">
-                  {formMessage}
-                </div>
-              )}
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={closeOrderForm}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                >
-                  Place Order
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
- 
 }
 
 export default App;
