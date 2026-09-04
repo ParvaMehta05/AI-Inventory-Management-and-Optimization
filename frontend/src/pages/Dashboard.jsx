@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../App.css";
 
 const API_URL = (
@@ -6,7 +6,11 @@ const API_URL = (
   "https://ai-inventory-management-and-optimization.onrender.com"
 ).replace(/\/$/, "");
 
-function Dashboard({ products = [], warehouses = [] }) {
+function Dashboard({
+  products = [],
+  warehouses = [],
+  inventory = [],
+}) {
   const [productId, setProductId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
 
@@ -14,23 +18,200 @@ function Dashboard({ products = [], warehouses = [] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Default to the first available product.
+  /*
+   * ------------------------------------------------------------
+   * INVENTORY AVAILABILITY
+   * ------------------------------------------------------------
+   *
+   * An inventory record means that this product/warehouse
+   * combination exists in the inventory table.
+   *
+   * We intentionally check for the record itself instead of
+   * quantity > 0 because a warehouse with 0 stock is still a
+   * valid inventory location for AI analysis.
+   */
+
+  const inventoryPairs = useMemo(() => {
+    return inventory.map((item) => ({
+      productId: Number(item.product_id),
+      warehouseId: Number(item.warehouse_id),
+    }));
+  }, [inventory]);
+
+  /*
+   * ------------------------------------------------------------
+   * AVAILABLE WAREHOUSES FOR SELECTED PRODUCT
+   * ------------------------------------------------------------
+   */
+
+  const availableWarehouses = useMemo(() => {
+    if (!productId) {
+      return warehouses;
+    }
+
+    const selectedProductId = Number(productId);
+
+    const warehouseIds = new Set(
+      inventoryPairs
+        .filter(
+          (item) => item.productId === selectedProductId
+        )
+        .map((item) => item.warehouseId)
+    );
+
+    return warehouses.filter((warehouse) =>
+      warehouseIds.has(Number(warehouse.id))
+    );
+  }, [
+    warehouses,
+    productId,
+    inventoryPairs,
+  ]);
+
+  /*
+   * ------------------------------------------------------------
+   * AVAILABLE PRODUCTS FOR SELECTED WAREHOUSE
+   * ------------------------------------------------------------
+   */
+
+  const availableProducts = useMemo(() => {
+    if (!warehouseId) {
+      return products;
+    }
+
+    const selectedWarehouseId = Number(warehouseId);
+
+    const productIds = new Set(
+      inventoryPairs
+        .filter(
+          (item) =>
+            item.warehouseId === selectedWarehouseId
+        )
+        .map((item) => item.productId)
+    );
+
+    return products.filter((product) =>
+      productIds.has(Number(product.id))
+    );
+  }, [
+    products,
+    warehouseId,
+    inventoryPairs,
+  ]);
+
+  /*
+   * ------------------------------------------------------------
+   * DEFAULT PRODUCT
+   * ------------------------------------------------------------
+   */
+
   useEffect(() => {
-    if (!productId && products.length > 0) {
+    if (products.length === 0) {
+      setProductId("");
+      return;
+    }
+
+    const currentProductExists = products.some(
+      (product) =>
+        Number(product.id) === Number(productId)
+    );
+
+    if (!productId || !currentProductExists) {
       setProductId(String(products[0].id));
     }
   }, [products, productId]);
 
-  // Default to the first available warehouse.
+  /*
+   * ------------------------------------------------------------
+   * DEFAULT / VALID WAREHOUSE FOR SELECTED PRODUCT
+   * ------------------------------------------------------------
+   */
+
   useEffect(() => {
-    if (!warehouseId && warehouses.length > 0) {
-      setWarehouseId(String(warehouses[0].id));
+    if (availableWarehouses.length === 0) {
+      setWarehouseId("");
+      return;
     }
-  }, [warehouses, warehouseId]);
+
+    const currentWarehouseExists =
+      availableWarehouses.some(
+        (warehouse) =>
+          Number(warehouse.id) === Number(warehouseId)
+      );
+
+    if (!warehouseId || !currentWarehouseExists) {
+      setWarehouseId(
+        String(availableWarehouses[0].id)
+      );
+    }
+  }, [
+    availableWarehouses,
+    warehouseId,
+  ]);
+
+  /*
+   * ------------------------------------------------------------
+   * KEEP PRODUCT VALID WHEN WAREHOUSE CHANGES
+   * ------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (availableProducts.length === 0) {
+      setProductId("");
+      return;
+    }
+
+    const currentProductExists =
+      availableProducts.some(
+        (product) =>
+          Number(product.id) === Number(productId)
+      );
+
+    if (!productId || !currentProductExists) {
+      setProductId(
+        String(availableProducts[0].id)
+      );
+    }
+  }, [
+    availableProducts,
+    productId,
+  ]);
+
+  /*
+   * ------------------------------------------------------------
+   * RESET RESULT WHEN SELECTION CHANGES
+   * ------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    setOptimization(null);
+    setError("");
+  }, [productId, warehouseId]);
+
+  /*
+   * ------------------------------------------------------------
+   * ANALYZE INVENTORY
+   * ------------------------------------------------------------
+   */
 
   const analyzeInventory = async () => {
     if (!productId || !warehouseId) {
-      setError("Select a product and warehouse first.");
+      setError(
+        "Select a product and warehouse with available inventory."
+      );
+      return;
+    }
+
+    const validCombination = inventoryPairs.some(
+      (item) =>
+        item.productId === Number(productId) &&
+        item.warehouseId === Number(warehouseId)
+    );
+
+    if (!validCombination) {
+      setError(
+        "This product is not available in the selected warehouse."
+      );
       return;
     }
 
@@ -53,35 +234,61 @@ function Dashboard({ products = [], warehouses = [] }) {
 
       setOptimization(data);
     } catch (err) {
-      console.error("Inventory optimization error:", err);
+      console.error(
+        "Inventory optimization error:",
+        err
+      );
 
       if (err instanceof TypeError) {
         setError(
           "Unable to connect to the optimization service. Please try again."
         );
       } else {
-        setError(err.message || "Failed to analyze inventory");
+        setError(
+          err.message ||
+            "Failed to analyze inventory"
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
+  /*
+   * ------------------------------------------------------------
+   * SELECTED PRODUCT / WAREHOUSE
+   * ------------------------------------------------------------
+   */
+
+  const selectedProduct = products.find(
+    (product) =>
+      Number(product.id) === Number(productId)
+  );
+
+  const selectedWarehouse = warehouses.find(
+    (warehouse) =>
+      Number(warehouse.id) === Number(warehouseId)
+  );
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <div>
-          <span className="section-kicker">AI / ML</span>
+          <span className="section-kicker">
+            AI / ML
+          </span>
 
           <h2>Inventory Optimization</h2>
 
           <p>
-            Analyze demand and get AI-powered reorder recommendations.
+            Analyze demand and get AI-powered
+            reorder recommendations.
           </p>
         </div>
       </header>
 
       {/* PRODUCT / WAREHOUSE SELECTION */}
+
       <section className="selection-panel">
         <div className="input-group">
           <label htmlFor="product-id">
@@ -91,7 +298,9 @@ function Dashboard({ products = [], warehouses = [] }) {
           <select
             id="product-id"
             value={productId}
-            onChange={(e) => setProductId(e.target.value)}
+            onChange={(e) =>
+              setProductId(e.target.value)
+            }
             disabled={products.length === 0}
           >
             {products.length === 0 && (
@@ -100,7 +309,14 @@ function Dashboard({ products = [], warehouses = [] }) {
               </option>
             )}
 
-            {products.map((product) => (
+            {availableProducts.length === 0 &&
+              products.length > 0 && (
+                <option value="">
+                  No products in selected warehouse
+                </option>
+              )}
+
+            {availableProducts.map((product) => (
               <option
                 key={product.id}
                 value={product.id}
@@ -119,21 +335,24 @@ function Dashboard({ products = [], warehouses = [] }) {
           <select
             id="warehouse-id"
             value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-            disabled={warehouses.length === 0}
+            onChange={(e) =>
+              setWarehouseId(e.target.value)
+            }
+            disabled={availableWarehouses.length === 0}
           >
-            {warehouses.length === 0 && (
+            {availableWarehouses.length === 0 && (
               <option value="">
-                No warehouses available
+                No warehouse has this product
               </option>
             )}
 
-            {warehouses.map((warehouse) => (
+            {availableWarehouses.map((warehouse) => (
               <option
                 key={warehouse.id}
                 value={warehouse.id}
               >
-                {warehouse.name} — {warehouse.location}
+                {warehouse.name} —{" "}
+                {warehouse.location}
               </option>
             ))}
           </select>
@@ -154,7 +373,37 @@ function Dashboard({ products = [], warehouses = [] }) {
         </button>
       </section>
 
+      {/* SELECTION INFORMATION */}
+
+      {selectedProduct &&
+        selectedWarehouse &&
+        productId &&
+        warehouseId && (
+          <div
+            style={{
+              marginTop: "12px",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              fontSize: "13px",
+              color: "#64748b",
+            }}
+          >
+            Analyzing{" "}
+            <strong style={{ color: "#1f2937" }}>
+              {selectedProduct.name}
+            </strong>{" "}
+            from{" "}
+            <strong style={{ color: "#1f2937" }}>
+              {selectedWarehouse.name}
+            </strong>
+            .
+          </div>
+        )}
+
       {/* ERROR */}
+
       {error && (
         <div className="form-message error">
           {error}
@@ -162,6 +411,7 @@ function Dashboard({ products = [], warehouses = [] }) {
       )}
 
       {/* RESULTS */}
+
       {optimization && (
         <section className="metrics-grid">
           <div className="metric-card">
@@ -226,7 +476,9 @@ function Dashboard({ products = [], warehouses = [] }) {
             <h3>Recommended Order</h3>
 
             <p>
-              {optimization.recommended_order_quantity}
+              {
+                optimization.recommended_order_quantity
+              }
             </p>
 
             <span>units</span>
@@ -260,6 +512,7 @@ function Dashboard({ products = [], warehouses = [] }) {
       )}
 
       {/* INITIAL STATE */}
+
       {!optimization &&
         !loading &&
         !error && (
@@ -267,8 +520,8 @@ function Dashboard({ products = [], warehouses = [] }) {
             <h4>Ready to analyze</h4>
 
             <p>
-              Select a product and warehouse, then click
-              "Analyze Inventory".
+              Select a product and warehouse, then
+              click "Analyze Inventory".
             </p>
           </div>
         )}

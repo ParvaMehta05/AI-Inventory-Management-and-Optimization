@@ -13,14 +13,19 @@ function App() {
   const [inventory, setInventory] = useState([]);
 
   const [loading, setLoading] = useState(true);
-  const [backendConnected, setBackendConnected] = useState(false);
+  const [backendConnected, setBackendConnected] =
+    useState(false);
   const [apiError, setApiError] = useState("");
 
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
-  const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [showProductForm, setShowProductForm] =
+    useState(false);
+  const [showWarehouseForm, setShowWarehouseForm] =
+    useState(false);
+  const [showInventoryForm, setShowInventoryForm] =
+    useState(false);
 
-  const [activeSection, setActiveSection] = useState("Dashboard");
+  const [activeSection, setActiveSection] =
+    useState("Dashboard");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,25 +34,29 @@ function App() {
     price: "",
   });
 
-  const [warehouseFormData, setWarehouseFormData] = useState({
-    name: "",
-    location: "",
-  });
+  const [warehouseFormData, setWarehouseFormData] =
+    useState({
+      name: "",
+      location: "",
+    });
 
-  const [inventoryFormData, setInventoryFormData] = useState({
-    product_id: "",
-    warehouse_id: "",
-    quantity: "",
-  });
+  const [inventoryFormData, setInventoryFormData] =
+    useState({
+      product_id: "",
+      warehouse_id: "",
+      quantity: "",
+    });
 
-  const [formMessage, setFormMessage] = useState("");
-  const [formError, setFormError] = useState("");
-
-  // ---------------- API ----------------
+  const [formMessage, setFormMessage] =
+    useState("");
+  const [formError, setFormError] =
+    useState("");
 
   const fetchEndpoint = async (endpoint) => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`);
+      const response = await fetch(
+        `${API_URL}${endpoint}`
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -62,7 +71,10 @@ function App() {
         data: Array.isArray(data) ? data : [],
       };
     } catch (error) {
-      console.error(`API error for ${endpoint}:`, error);
+      console.error(
+        `API error for ${endpoint}:`,
+        error
+      );
 
       return {
         success: false,
@@ -95,21 +107,27 @@ function App() {
       setProducts(productsResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Products: ${productsResult.error}`);
+      errors.push(
+        `Products: ${productsResult.error}`
+      );
     }
 
     if (warehousesResult.success) {
       setWarehouses(warehousesResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Warehouses: ${warehousesResult.error}`);
+      errors.push(
+        `Warehouses: ${warehousesResult.error}`
+      );
     }
 
     if (inventoryResult.success) {
       setInventory(inventoryResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Inventory: ${inventoryResult.error}`);
+      errors.push(
+        `Inventory: ${inventoryResult.error}`
+      );
     }
 
     setBackendConnected(hasConnection);
@@ -128,8 +146,6 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  // ---------------- INPUT HANDLERS ----------------
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -158,7 +174,10 @@ function App() {
     }));
   };
 
-  const getApiErrorMessage = async (response, defaultMessage) => {
+  const getApiErrorMessage = async (
+    response,
+    defaultMessage
+  ) => {
     let errorMessage = defaultMessage;
 
     try {
@@ -192,36 +211,48 @@ function App() {
       !formData.category.trim() ||
       !formData.price
     ) {
-      setFormError("Please fill in all product fields.");
+      setFormError(
+        "Please fill in all product fields."
+      );
       return;
     }
 
     if (Number(formData.price) < 0) {
-      setFormError("Price cannot be negative.");
+      setFormError(
+        "Price cannot be negative."
+      );
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/products/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          sku: formData.sku.trim(),
-          category: formData.category.trim(),
-          price: Number(formData.price),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/products/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            sku: formData.sku.trim(),
+            category: formData.category.trim(),
+            price: Number(formData.price),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
-          await getApiErrorMessage(response, "Unable to add product.")
+          await getApiErrorMessage(
+            response,
+            "Unable to add product."
+          )
         );
       }
 
-      setFormMessage("Product added successfully.");
+      setFormMessage(
+        "Product added successfully."
+      );
 
       setFormData({
         name: "",
@@ -237,10 +268,14 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add product error:", error);
+      console.error(
+        "Add product error:",
+        error
+      );
 
       setFormError(
-        error.message || "Unable to add product. Please try again."
+        error.message ||
+          "Unable to add product. Please try again."
       );
     }
   };
@@ -257,29 +292,41 @@ function App() {
       !warehouseFormData.name.trim() ||
       !warehouseFormData.location.trim()
     ) {
-      setFormError("Please enter the warehouse name and location.");
+      setFormError(
+        "Please enter the warehouse name and location."
+      );
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/warehouses/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: warehouseFormData.name.trim(),
-          location: warehouseFormData.location.trim(),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/warehouses/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name:
+              warehouseFormData.name.trim(),
+            location:
+              warehouseFormData.location.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
-          await getApiErrorMessage(response, "Unable to add warehouse.")
+          await getApiErrorMessage(
+            response,
+            "Unable to add warehouse."
+          )
         );
       }
 
-      setFormMessage("Warehouse added successfully.");
+      setFormMessage(
+        "Warehouse added successfully."
+      );
 
       setWarehouseFormData({
         name: "",
@@ -293,10 +340,14 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add warehouse error:", error);
+      console.error(
+        "Add warehouse error:",
+        error
+      );
 
       setFormError(
-        error.message || "Unable to add warehouse. Please try again."
+        error.message ||
+          "Unable to add warehouse. Please try again."
       );
     }
   };
@@ -320,31 +371,49 @@ function App() {
       return;
     }
 
-    if (Number(inventoryFormData.quantity) < 0) {
-      setFormError("Quantity cannot be negative.");
+    if (
+      Number(inventoryFormData.quantity) < 0
+    ) {
+      setFormError(
+        "Quantity cannot be negative."
+      );
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/inventory/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: Number(inventoryFormData.product_id),
-          warehouse_id: Number(inventoryFormData.warehouse_id),
-          quantity: Number(inventoryFormData.quantity),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/inventory/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_id: Number(
+              inventoryFormData.product_id
+            ),
+            warehouse_id: Number(
+              inventoryFormData.warehouse_id
+            ),
+            quantity: Number(
+              inventoryFormData.quantity
+            ),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
-          await getApiErrorMessage(response, "Unable to add inventory.")
+          await getApiErrorMessage(
+            response,
+            "Unable to add inventory."
+          )
         );
       }
 
-      setFormMessage("Inventory added successfully.");
+      setFormMessage(
+        "Inventory added successfully."
+      );
 
       setInventoryFormData({
         product_id: "",
@@ -359,10 +428,14 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add inventory error:", error);
+      console.error(
+        "Add inventory error:",
+        error
+      );
 
       setFormError(
-        error.message || "Unable to add inventory. Please try again."
+        error.message ||
+          "Unable to add inventory. Please try again."
       );
     }
   };
@@ -431,15 +504,15 @@ function App() {
   // ---------------- DASHBOARD DATA ----------------
 
   const totalStock = inventory.reduce(
-    (total, item) => total + Number(item.quantity || 0),
+    (total, item) =>
+      total + Number(item.quantity || 0),
     0
   );
 
   const lowStockItems = inventory.filter(
-    (item) => Number(item.quantity || 0) <= 10
+    (item) =>
+      Number(item.quantity || 0) <= 10
   );
-
-  // ---------------- NAVIGATION ----------------
 
   const handleNavigation = (section) => {
     setActiveSection(section);
@@ -452,7 +525,9 @@ function App() {
       Optimization: "optimization",
     };
 
-    const element = document.getElementById(sectionIds[section]);
+    const element = document.getElementById(
+      sectionIds[section]
+    );
 
     if (element) {
       element.scrollIntoView({
@@ -462,21 +537,25 @@ function App() {
     }
   };
 
-  // ---------------- UI ----------------
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">AI</div>
+          <div className="brand-mark">
+            AI
+          </div>
 
           <div>
             <h1>Inventory</h1>
-            <span>Management System</span>
+            <span>
+              Management System
+            </span>
           </div>
         </div>
 
-        <div className="nav-heading">WORKSPACE</div>
+        <div className="nav-heading">
+          WORKSPACE
+        </div>
 
         <nav className="sidebar-nav">
           {[
@@ -489,9 +568,13 @@ function App() {
             <button
               key={item}
               className={`nav-item ${
-                activeSection === item ? "active" : ""
+                activeSection === item
+                  ? "active"
+                  : ""
               }`}
-              onClick={() => handleNavigation(item)}
+              onClick={() =>
+                handleNavigation(item)
+              }
             >
               <span className="nav-icon">
                 {item === "Dashboard" && "▦"}
@@ -510,7 +593,9 @@ function App() {
           <div className="connection-row">
             <span
               className={`connection-dot ${
-                backendConnected ? "online" : "offline"
+                backendConnected
+                  ? "online"
+                  : "offline"
               }`}
             />
 
@@ -522,21 +607,32 @@ function App() {
           </div>
 
           <small>
-            FastAPI · {API_URL.replace(/^https?:\/\//, "")}
+            FastAPI ·{" "}
+            {API_URL.replace(
+              /^https?:\/\//,
+              ""
+            )}
           </small>
         </div>
       </aside>
 
       <main className="main-content">
-        <header className="topbar" id="dashboard">
+        <header
+          className="topbar"
+          id="dashboard"
+        >
           <div>
-            <div className="breadcrumb">WORKSPACE / DASHBOARD</div>
+            <div className="breadcrumb">
+              WORKSPACE / DASHBOARD
+            </div>
 
-            <h2>Inventory Overview</h2>
+            <h2>
+              Inventory Overview
+            </h2>
 
             <p>
-              Manage products, warehouses, stock and AI-powered inventory
-              optimization.
+              Keep track of your products,
+              warehouses and stock.
             </p>
           </div>
 
@@ -553,68 +649,124 @@ function App() {
         {apiError && (
           <div className="api-alert">
             <div>
-              <strong>API Notice</strong>
+              <strong>
+                API Notice
+              </strong>
+
               <p>{apiError}</p>
             </div>
 
-            <button onClick={fetchData}>Retry</button>
+            <button onClick={fetchData}>
+              Retry
+            </button>
           </div>
         )}
 
-        {/* ---------------- STATS ---------------- */}
+        {/* STATS */}
 
         <section className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon blue">□</div>
+            <div className="stat-icon blue">
+              □
+            </div>
 
             <div className="stat-content">
               <span>Products</span>
-              <strong>{loading ? "—" : products.length}</strong>
-              <small>Registered products</small>
+
+              <strong>
+                {loading
+                  ? "—"
+                  : products.length}
+              </strong>
+
+              <small>
+                Registered products
+              </small>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon green">⌂</div>
+            <div className="stat-icon green">
+              ⌂
+            </div>
 
             <div className="stat-content">
               <span>Warehouses</span>
-              <strong>{loading ? "—" : warehouses.length}</strong>
-              <small>Active locations</small>
+
+              <strong>
+                {loading
+                  ? "—"
+                  : warehouses.length}
+              </strong>
+
+              <small>
+                Active locations
+              </small>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon orange">≡</div>
+            <div className="stat-icon orange">
+              ≡
+            </div>
 
             <div className="stat-content">
-              <span>Inventory Records</span>
-              <strong>{loading ? "—" : inventory.length}</strong>
-              <small>Tracked records</small>
+              <span>
+                Inventory Records
+              </span>
+
+              <strong>
+                {loading
+                  ? "—"
+                  : inventory.length}
+              </strong>
+
+              <small>
+                Tracked records
+              </small>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon purple">#</div>
+            <div className="stat-icon purple">
+              #
+            </div>
 
             <div className="stat-content">
-              <span>Total Stock</span>
-              <strong>{loading ? "—" : totalStock}</strong>
-              <small>Units currently tracked</small>
+              <span>
+                Total Stock
+              </span>
+
+              <strong>
+                {loading
+                  ? "—"
+                  : totalStock}
+              </strong>
+
+              <small>
+                Units currently tracked
+              </small>
             </div>
           </div>
         </section>
 
-        {/* ---------------- PRODUCTS ---------------- */}
+        {/* PRODUCTS */}
 
-        <section className="content-card" id="products">
+        <section
+          className="content-card"
+          id="products"
+        >
           <div className="section-header">
             <div>
-              <span className="section-kicker">CATALOG</span>
+              <span className="section-kicker">
+                CATALOG
+              </span>
 
               <h3>Products</h3>
 
-              <p>Your current product catalog.</p>
+              <p>
+                Your current product catalog.
+              </p>
             </div>
 
             <button
@@ -627,28 +779,33 @@ function App() {
 
           {loading ? (
             <div className="empty-state compact">
-              <h4>Loading products...</h4>
-              <p>Connecting to the inventory database.</p>
+              <h4>
+                Loading products...
+              </h4>
+
+              <p>
+                Connecting to the inventory
+                database.
+              </p>
             </div>
           ) : products.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">□</div>
+              <div className="empty-icon">
+                □
+              </div>
 
-              <h4>No products yet</h4>
+              <h4>
+                No products yet
+              </h4>
 
-              <p>Add your first product to get started.</p>
+              <p>
+                Add your first product to
+                get started.
+              </p>
             </div>
           ) : (
             <div className="table-wrapper">
               <table className="data-table">
-                <colgroup>
-                  <col style={{ width: "10%" }} />
-                  <col style={{ width: "28%" }} />
-                  <col style={{ width: "20%" }} />
-                  <col style={{ width: "22%" }} />
-                  <col style={{ width: "20%" }} />
-                </colgroup>
-
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -660,55 +817,70 @@ function App() {
                 </thead>
 
                 <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <span className="muted-text">
-                          #{product.id}
-                        </span>
-                      </td>
+                  {products.map(
+                    (product) => (
+                      <tr
+                        key={product.id}
+                      >
+                        <td>
+                          <span className="muted-text">
+                            #{product.id}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="table-primary">
-                          {product.name}
-                        </span>
-                      </td>
+                        <td>
+                          <span className="table-primary">
+                            {product.name}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="sku-text">
-                          {product.sku}
-                        </span>
-                      </td>
+                        <td>
+                          <span className="sku-text">
+                            {product.sku}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="category-badge">
-                          {product.category}
-                        </span>
-                      </td>
+                        <td>
+                          <span className="category-badge">
+                            {product.category}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="price-text">
-                          ${Number(product.price).toFixed(2)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        <td>
+                          <span className="price-text">
+                            $
+                            {Number(
+                              product.price
+                            ).toFixed(2)}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
           )}
         </section>
 
-        {/* ---------------- WAREHOUSES ---------------- */}
+        {/* WAREHOUSES */}
 
-        <section className="content-card" id="warehouses">
+        <section
+          className="content-card"
+          id="warehouses"
+        >
           <div className="section-header">
             <div>
-              <span className="section-kicker">LOCATIONS</span>
+              <span className="section-kicker">
+                LOCATIONS
+              </span>
 
               <h3>Warehouses</h3>
 
-              <p>Storage locations connected to the system.</p>
+              <p>
+                Storage locations connected
+                to the system.
+              </p>
             </div>
 
             <button
@@ -721,24 +893,29 @@ function App() {
 
           {loading ? (
             <div className="empty-state compact">
-              <h4>Loading warehouses...</h4>
-              <p>Checking connected storage locations.</p>
+              <h4>
+                Loading warehouses...
+              </h4>
+
+              <p>
+                Checking connected storage
+                locations.
+              </p>
             </div>
           ) : warehouses.length === 0 ? (
             <div className="empty-state compact">
-              <h4>No warehouses found</h4>
+              <h4>
+                No warehouses found
+              </h4>
 
-              <p>Add your first warehouse to get started.</p>
+              <p>
+                Add your first warehouse to
+                get started.
+              </p>
             </div>
           ) : (
             <div className="table-wrapper">
               <table className="data-table warehouse-table">
-                <colgroup>
-                  <col style={{ width: "15%" }} />
-                  <col style={{ width: "45%" }} />
-                  <col style={{ width: "40%" }} />
-                </colgroup>
-
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -748,44 +925,54 @@ function App() {
                 </thead>
 
                 <tbody>
-                  {warehouses.map((warehouse) => (
-                    <tr key={warehouse.id}>
-                      <td>
-                        <span className="muted-text">
-                          #{warehouse.id}
-                        </span>
-                      </td>
+                  {warehouses.map(
+                    (warehouse) => (
+                      <tr
+                        key={warehouse.id}
+                      >
+                        <td>
+                          <span className="muted-text">
+                            #{warehouse.id}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="table-primary">
-                          {warehouse.name}
-                        </span>
-                      </td>
+                        <td>
+                          <span className="table-primary">
+                            {warehouse.name}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="table-secondary">
-                          {warehouse.location}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        <td>
+                          <span className="table-secondary">
+                            {warehouse.location}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
           )}
         </section>
 
-        {/* ---------------- INVENTORY ---------------- */}
+        {/* INVENTORY */}
 
-        <section className="content-card" id="inventory">
+        <section
+          className="content-card"
+          id="inventory"
+        >
           <div className="section-header inventory-header">
             <div>
-              <span className="section-kicker">STOCK</span>
+              <span className="section-kicker">
+                STOCK
+              </span>
 
               <h3>Inventory</h3>
 
               <p>
-                Current stock across your warehouse locations.
+                Current stock across your
+                warehouse locations.
               </p>
             </div>
 
@@ -808,30 +995,33 @@ function App() {
 
           {loading ? (
             <div className="empty-state compact">
-              <h4>Loading inventory...</h4>
+              <h4>
+                Loading inventory...
+              </h4>
 
-              <p>Reading current stock levels.</p>
+              <p>
+                Reading current stock
+                levels.
+              </p>
             </div>
           ) : inventory.length === 0 ? (
             <div className="empty-state compact">
-              <div className="empty-icon">≡</div>
+              <div className="empty-icon">
+                ≡
+              </div>
 
-              <h4>No inventory records</h4>
+              <h4>
+                No inventory records
+              </h4>
 
               <p>
-                Add inventory by selecting a product and warehouse.
+                Add inventory by selecting
+                a product and warehouse.
               </p>
             </div>
           ) : (
             <div className="table-wrapper">
               <table className="data-table inventory-table">
-                <colgroup>
-                  <col style={{ width: "18%" }} />
-                  <col style={{ width: "27%" }} />
-                  <col style={{ width: "27%" }} />
-                  <col style={{ width: "28%" }} />
-                </colgroup>
-
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -843,18 +1033,28 @@ function App() {
 
                 <tbody>
                   {inventory.map((item) => {
-                    const product = products.find(
-                      (entry) =>
-                        Number(entry.id) === Number(item.product_id)
-                    );
+                    const product =
+                      products.find(
+                        (entry) =>
+                          Number(entry.id) ===
+                          Number(
+                            item.product_id
+                          )
+                      );
 
-                    const warehouse = warehouses.find(
-                      (entry) =>
-                        Number(entry.id) === Number(item.warehouse_id)
-                    );
+                    const warehouse =
+                      warehouses.find(
+                        (entry) =>
+                          Number(entry.id) ===
+                          Number(
+                            item.warehouse_id
+                          )
+                      );
 
                     return (
-                      <tr key={item.id}>
+                      <tr
+                        key={item.id}
+                      >
                         <td>
                           <span className="muted-text">
                             #{item.id}
@@ -869,11 +1069,16 @@ function App() {
                             }}
                           >
                             <span className="table-primary">
-                              {product?.name || "Unknown product"}
+                              {product?.name ||
+                                "Unknown product"}
                             </span>
 
                             <span className="table-secondary">
-                              ID: #{item.product_id}
+                              ID: #
+                              {
+                                item.product_id
+                              }
+
                               {product?.sku
                                 ? ` • SKU: ${product.sku}`
                                 : ""}
@@ -894,7 +1099,11 @@ function App() {
                             </span>
 
                             <span className="table-secondary">
-                              ID: #{item.warehouse_id}
+                              ID: #
+                              {
+                                item.warehouse_id
+                              }
+
                               {warehouse?.location
                                 ? ` • ${warehouse.location}`
                                 : ""}
@@ -905,7 +1114,9 @@ function App() {
                         <td>
                           <span
                             className={`quantity-badge ${
-                              Number(item.quantity) <= 10
+                              Number(
+                                item.quantity
+                              ) <= 10
                                 ? "low-stock"
                                 : ""
                             }`}
@@ -922,141 +1133,132 @@ function App() {
           )}
         </section>
 
-        {/* ---------------- AI OPTIMIZATION ---------------- */}
+        {/* AI INVENTORY OPTIMIZATION */}
 
-        <section className="content-card" id="optimization">
+        <section
+          className="content-card"
+          id="optimization"
+        >
           <Dashboard
             products={products}
             warehouses={warehouses}
+            inventory={inventory}
           />
         </section>
 
-        {/* ---------------- STOCK ALERTS ---------------- */}
+        {/* STOCK ALERTS */}
 
         <section className="content-card">
           <div className="section-header">
             <div>
-              <span className="section-kicker">ATTENTION</span>
+              <span className="section-kicker">
+                ATTENTION
+              </span>
 
-              <h3>Stock Alerts</h3>
+              <h3>
+                Stock Alerts
+              </h3>
 
-              <p>Items that may need attention soon.</p>
+              <p>
+                Items that may need attention
+                soon.
+              </p>
             </div>
           </div>
 
           {lowStockItems.length === 0 ? (
             <div className="empty-state compact">
-              <h4>Everything looks good</h4>
+              <h4>
+                Everything looks good
+              </h4>
 
               <p>
-                No inventory records are currently below the
-                low-stock threshold.
+                No inventory records are
+                currently below the low-stock
+                threshold.
               </p>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <colgroup>
-                  <col style={{ width: "30%" }} />
-                  <col style={{ width: "30%" }} />
-                  <col style={{ width: "20%" }} />
-                  <col style={{ width: "20%" }} />
-                </colgroup>
+            <div className="alert-list">
+              {lowStockItems.map((item) => {
+                const product =
+                  products.find(
+                    (entry) =>
+                      Number(entry.id) ===
+                      Number(
+                        item.product_id
+                      )
+                  );
 
-                <thead>
-                  <tr>
-                    <th>PRODUCT</th>
-                    <th>WAREHOUSE</th>
-                    <th>CURRENT STOCK</th>
-                    <th>STATUS</th>
-                  </tr>
-                </thead>
+                const warehouse =
+                  warehouses.find(
+                    (entry) =>
+                      Number(entry.id) ===
+                      Number(
+                        item.warehouse_id
+                      )
+                  );
 
-                <tbody>
-                  {lowStockItems.map((item) => {
-                    const product = products.find(
-                      (entry) =>
-                        Number(entry.id) === Number(item.product_id)
-                    );
+                return (
+                  <div
+                    className="stock-alert"
+                    key={item.id}
+                  >
+                    <div>
+                      <strong>
+                        {product?.name ||
+                          `Product #${item.product_id}`}
+                      </strong>
 
-                    const warehouse = warehouses.find(
-                      (entry) =>
-                        Number(entry.id) === Number(item.warehouse_id)
-                    );
+                      <span>
+                        SKU:{" "}
+                        {product?.sku || "—"}
+                      </span>
+                    </div>
 
-                    const quantity = Number(item.quantity || 0);
+                    <div>
+                      <strong>
+                        {warehouse?.name ||
+                          `Warehouse #${item.warehouse_id}`}
+                      </strong>
 
-                    return (
-                      <tr key={item.id}>
-                        <td>
-                          <div
-                            style={{
-                              display: "grid",
-                              gap: "4px",
-                            }}
-                          >
-                            <span className="table-primary">
-                              {product?.name ||
-                                `Product #${item.product_id}`}
-                            </span>
+                      <span>
+                        {warehouse?.location ||
+                          "Location unavailable"}
+                      </span>
+                    </div>
 
-                            <span className="table-secondary">
-                              SKU: {product?.sku || "—"}
-                            </span>
-                          </div>
-                        </td>
+                    <span className="low-stock-value">
+                      {item.quantity}{" "}
+                      {Number(
+                        item.quantity
+                      ) === 1
+                        ? "unit"
+                        : "units"}
+                    </span>
 
-                        <td>
-                          <div
-                            style={{
-                              display: "grid",
-                              gap: "4px",
-                            }}
-                          >
-                            <span className="table-primary">
-                              {warehouse?.name ||
-                                `Warehouse #${item.warehouse_id}`}
-                            </span>
-
-                            <span className="table-secondary">
-                              {warehouse?.location || "Location unavailable"}
-                            </span>
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="quantity-badge low-stock">
-                            {quantity}{" "}
-                            {quantity === 1 ? "unit" : "units"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="category-badge">
-                            LOW STOCK
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    <span className="category-badge">
+                      LOW STOCK
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
 
-        {/* ---------------- FOOTER ---------------- */}
-
         <footer className="page-footer">
-          <span>AI Inventory Management</span>
+          <span>
+            AI Inventory Management
+          </span>
 
           <span>
-            Multichannel inventory synchronization & optimization
+            Inventory optimization dashboard
           </span>
         </footer>
       </main>
 
-      {/* ---------------- ADD PRODUCT MODAL ---------------- */}
+      {/* ADD PRODUCT MODAL */}
 
       {showProductForm && (
         <div
@@ -1065,7 +1267,9 @@ function App() {
         >
           <div
             className="modal"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="modal-header">
               <div>
@@ -1073,10 +1277,13 @@ function App() {
                   PRODUCT CATALOG
                 </span>
 
-                <h3>Add Product</h3>
+                <h3>
+                  Add Product
+                </h3>
 
                 <p>
-                  Enter the basic details for a new product.
+                  Enter the basic details
+                  for a new product.
                 </p>
               </div>
 
@@ -1089,50 +1296,68 @@ function App() {
               </button>
             </div>
 
-            <form onSubmit={handleAddProduct}>
+            <form
+              onSubmit={handleAddProduct}
+            >
               <div className="form-grid">
                 <div className="form-group full">
-                  <label htmlFor="name">Product Name</label>
+                  <label htmlFor="name">
+                    Product Name
+                  </label>
 
                   <input
                     id="name"
                     name="name"
                     type="text"
                     value={formData.name}
-                    onChange={handleInputChange}
+                    onChange={
+                      handleInputChange
+                    }
                     placeholder="e.g. Wireless Mouse"
                     autoFocus
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="sku">SKU</label>
+                  <label htmlFor="sku">
+                    SKU
+                  </label>
 
                   <input
                     id="sku"
                     name="sku"
                     type="text"
                     value={formData.sku}
-                    onChange={handleInputChange}
+                    onChange={
+                      handleInputChange
+                    }
                     placeholder="e.g. MOU001"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="category">Category</label>
+                  <label htmlFor="category">
+                    Category
+                  </label>
 
                   <input
                     id="category"
                     name="category"
                     type="text"
-                    value={formData.category}
-                    onChange={handleInputChange}
+                    value={
+                      formData.category
+                    }
+                    onChange={
+                      handleInputChange
+                    }
                     placeholder="e.g. Electronics"
                   />
                 </div>
 
                 <div className="form-group full">
-                  <label htmlFor="price">Price</label>
+                  <label htmlFor="price">
+                    Price
+                  </label>
 
                   <input
                     id="price"
@@ -1141,7 +1366,9 @@ function App() {
                     min="0"
                     step="0.01"
                     value={formData.price}
-                    onChange={handleInputChange}
+                    onChange={
+                      handleInputChange
+                    }
                     placeholder="e.g. 25.99"
                   />
                 </div>
@@ -1163,7 +1390,9 @@ function App() {
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={closeProductForm}
+                  onClick={
+                    closeProductForm
+                  }
                 >
                   Cancel
                 </button>
@@ -1180,7 +1409,7 @@ function App() {
         </div>
       )}
 
-      {/* ---------------- ADD WAREHOUSE MODAL ---------------- */}
+      {/* ADD WAREHOUSE MODAL */}
 
       {showWarehouseForm && (
         <div
@@ -1189,7 +1418,9 @@ function App() {
         >
           <div
             className="modal"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="modal-header">
               <div>
@@ -1197,23 +1428,30 @@ function App() {
                   STORAGE LOCATIONS
                 </span>
 
-                <h3>Add Warehouse</h3>
+                <h3>
+                  Add Warehouse
+                </h3>
 
                 <p>
-                  Add a new warehouse or storage location.
+                  Add a new warehouse or
+                  storage location.
                 </p>
               </div>
 
               <button
                 className="modal-close"
-                onClick={closeWarehouseForm}
+                onClick={
+                  closeWarehouseForm
+                }
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleAddWarehouse}>
+            <form
+              onSubmit={handleAddWarehouse}
+            >
               <div className="form-grid">
                 <div className="form-group full">
                   <label htmlFor="warehouse-name">
@@ -1224,8 +1462,12 @@ function App() {
                     id="warehouse-name"
                     name="name"
                     type="text"
-                    value={warehouseFormData.name}
-                    onChange={handleWarehouseInputChange}
+                    value={
+                      warehouseFormData.name
+                    }
+                    onChange={
+                      handleWarehouseInputChange
+                    }
                     placeholder="e.g. Main Warehouse"
                     autoFocus
                   />
@@ -1240,8 +1482,12 @@ function App() {
                     id="warehouse-location"
                     name="location"
                     type="text"
-                    value={warehouseFormData.location}
-                    onChange={handleWarehouseInputChange}
+                    value={
+                      warehouseFormData.location
+                    }
+                    onChange={
+                      handleWarehouseInputChange
+                    }
                     placeholder="e.g. New York"
                   />
                 </div>
@@ -1263,7 +1509,9 @@ function App() {
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={closeWarehouseForm}
+                  onClick={
+                    closeWarehouseForm
+                  }
                 >
                   Cancel
                 </button>
@@ -1280,7 +1528,7 @@ function App() {
         </div>
       )}
 
-      {/* ---------------- ADD INVENTORY MODAL ---------------- */}
+      {/* ADD INVENTORY MODAL */}
 
       {showInventoryForm && (
         <div
@@ -1289,7 +1537,9 @@ function App() {
         >
           <div
             className="modal"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="modal-header">
               <div>
@@ -1297,23 +1547,30 @@ function App() {
                   STOCK MANAGEMENT
                 </span>
 
-                <h3>Add Inventory</h3>
+                <h3>
+                  Add Inventory
+                </h3>
 
                 <p>
-                  Assign stock to a product and warehouse.
+                  Assign stock to a product
+                  and warehouse.
                 </p>
               </div>
 
               <button
                 className="modal-close"
-                onClick={closeInventoryForm}
+                onClick={
+                  closeInventoryForm
+                }
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleAddInventory}>
+            <form
+              onSubmit={handleAddInventory}
+            >
               <div className="form-grid">
                 <div className="form-group full">
                   <label htmlFor="inventory-product">
@@ -1323,81 +1580,34 @@ function App() {
                   <select
                     id="inventory-product"
                     name="product_id"
-                    value={inventoryFormData.product_id}
-                    onChange={handleInventoryInputChange}
+                    value={
+                      inventoryFormData.product_id
+                    }
+                    onChange={
+                      handleInventoryInputChange
+                    }
                   >
                     <option value="">
                       Select a product
                     </option>
 
-                    {products.map((product) => (
-                      <option
-                        key={product.id}
-                        value={product.id}
-                      >
-                        #{product.id} — {product.name}
-                        {product.sku
-                          ? ` — ${product.sku}`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
-
-                  {inventoryFormData.product_id &&
-                    (() => {
-                      const selectedProduct = products.find(
-                        (product) =>
-                          Number(product.id) ===
-                          Number(inventoryFormData.product_id)
-                      );
-
-                      if (!selectedProduct) return null;
-
-                      return (
-                        <div
-                          style={{
-                            marginTop: "10px",
-                            padding: "12px 14px",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "10px",
-                            background: "#f8fafc",
-                          }}
+                    {products.map(
+                      (product) => (
+                        <option
+                          key={product.id}
+                          value={
+                            product.id
+                          }
                         >
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 700,
-                              color: "#64748b",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                            }}
-                          >
-                            Selected Product
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: "4px",
-                              fontWeight: 700,
-                              color: "#1f2937",
-                            }}
-                          >
-                            #{selectedProduct.id} —{" "}
-                            {selectedProduct.name}
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: "3px",
-                              fontSize: "13px",
-                              color: "#64748b",
-                            }}
-                          >
-                            SKU: {selectedProduct.sku || "—"}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                          #{product.id} —{" "}
+                          {product.name}
+                          {product.sku
+                            ? ` — ${product.sku}`
+                            : ""}
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
 
                 <div className="form-group full">
@@ -1408,84 +1618,36 @@ function App() {
                   <select
                     id="inventory-warehouse"
                     name="warehouse_id"
-                    value={inventoryFormData.warehouse_id}
-                    onChange={handleInventoryInputChange}
+                    value={
+                      inventoryFormData.warehouse_id
+                    }
+                    onChange={
+                      handleInventoryInputChange
+                    }
                   >
                     <option value="">
                       Select a warehouse
                     </option>
 
-                    {warehouses.map((warehouse) => (
-                      <option
-                        key={warehouse.id}
-                        value={warehouse.id}
-                      >
-                        #{warehouse.id} — {warehouse.name}
-                        {warehouse.location
-                          ? ` — ${warehouse.location}`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
-
-                  {inventoryFormData.warehouse_id &&
-                    (() => {
-                      const selectedWarehouse = warehouses.find(
-                        (warehouse) =>
-                          Number(warehouse.id) ===
-                          Number(
-                            inventoryFormData.warehouse_id
-                          )
-                      );
-
-                      if (!selectedWarehouse) return null;
-
-                      return (
-                        <div
-                          style={{
-                            marginTop: "10px",
-                            padding: "12px 14px",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "10px",
-                            background: "#f8fafc",
-                          }}
+                    {warehouses.map(
+                      (warehouse) => (
+                        <option
+                          key={
+                            warehouse.id
+                          }
+                          value={
+                            warehouse.id
+                          }
                         >
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 700,
-                              color: "#64748b",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                            }}
-                          >
-                            Selected Warehouse
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: "4px",
-                              fontWeight: 700,
-                              color: "#1f2937",
-                            }}
-                          >
-                            #{selectedWarehouse.id} —{" "}
-                            {selectedWarehouse.name}
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: "3px",
-                              fontSize: "13px",
-                              color: "#64748b",
-                            }}
-                          >
-                            Location:{" "}
-                            {selectedWarehouse.location || "—"}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                          #{warehouse.id} —{" "}
+                          {warehouse.name}
+                          {warehouse.location
+                            ? ` — ${warehouse.location}`
+                            : ""}
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
 
                 <div className="form-group full">
@@ -1499,8 +1661,12 @@ function App() {
                     type="number"
                     min="0"
                     step="1"
-                    value={inventoryFormData.quantity}
-                    onChange={handleInventoryInputChange}
+                    value={
+                      inventoryFormData.quantity
+                    }
+                    onChange={
+                      handleInventoryInputChange
+                    }
                     placeholder="e.g. 100"
                   />
                 </div>
@@ -1522,7 +1688,9 @@ function App() {
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={closeInventoryForm}
+                  onClick={
+                    closeInventoryForm
+                  }
                 >
                   Cancel
                 </button>
