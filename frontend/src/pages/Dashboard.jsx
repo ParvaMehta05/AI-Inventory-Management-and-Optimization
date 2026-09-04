@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import "../App.css";
 
+const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  "https://ai-inventory-management-and-optimization.onrender.com"
+).replace(/\/$/, "");
+
 function Dashboard({ products = [], warehouses = [] }) {
   const [productId, setProductId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
@@ -9,14 +14,14 @@ function Dashboard({ products = [], warehouses = [] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Once the catalog loads, default to the first product/warehouse
-  // instead of asking the user to type an ID.
+  // Default to the first available product.
   useEffect(() => {
     if (!productId && products.length > 0) {
       setProductId(String(products[0].id));
     }
   }, [products, productId]);
 
+  // Default to the first available warehouse.
   useEffect(() => {
     if (!warehouseId && warehouses.length > 0) {
       setWarehouseId(String(warehouses[0].id));
@@ -35,18 +40,28 @@ function Dashboard({ products = [], warehouses = [] }) {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/optimization/${productId}/${warehouseId}`
+        `${API_URL}/optimization/${productId}/${warehouseId}`
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to analyze inventory");
+        throw new Error(
+          data.detail || "Failed to analyze inventory"
+        );
       }
 
       setOptimization(data);
     } catch (err) {
-      setError(err.message);
+      console.error("Inventory optimization error:", err);
+
+      if (err instanceof TypeError) {
+        setError(
+          "Unable to connect to the optimization service. Please try again."
+        );
+      } else {
+        setError(err.message || "Failed to analyze inventory");
+      }
     } finally {
       setLoading(false);
     }
@@ -54,7 +69,6 @@ function Dashboard({ products = [], warehouses = [] }) {
 
   return (
     <div className="dashboard">
-
       <header className="dashboard-header">
         <div>
           <span className="section-kicker">AI / ML</span>
@@ -69,7 +83,6 @@ function Dashboard({ products = [], warehouses = [] }) {
 
       {/* PRODUCT / WAREHOUSE SELECTION */}
       <section className="selection-panel">
-
         <div className="input-group">
           <label htmlFor="product-id">
             Product
@@ -82,11 +95,16 @@ function Dashboard({ products = [], warehouses = [] }) {
             disabled={products.length === 0}
           >
             {products.length === 0 && (
-              <option value="">No products available</option>
+              <option value="">
+                No products available
+              </option>
             )}
 
             {products.map((product) => (
-              <option key={product.id} value={product.id}>
+              <option
+                key={product.id}
+                value={product.id}
+              >
                 {product.name} — {product.sku}
               </option>
             ))}
@@ -105,11 +123,16 @@ function Dashboard({ products = [], warehouses = [] }) {
             disabled={warehouses.length === 0}
           >
             {warehouses.length === 0 && (
-              <option value="">No warehouses available</option>
+              <option value="">
+                No warehouses available
+              </option>
             )}
 
             {warehouses.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
+              <option
+                key={warehouse.id}
+                value={warehouse.id}
+              >
                 {warehouse.name} — {warehouse.location}
               </option>
             ))}
@@ -119,11 +142,16 @@ function Dashboard({ products = [], warehouses = [] }) {
         <button
           className="primary-button"
           onClick={analyzeInventory}
-          disabled={loading || !productId || !warehouseId}
+          disabled={
+            loading ||
+            !productId ||
+            !warehouseId
+          }
         >
-          {loading ? "Analyzing..." : "Analyze Inventory"}
+          {loading
+            ? "Analyzing..."
+            : "Analyze Inventory"}
         </button>
-
       </section>
 
       {/* ERROR */}
@@ -136,7 +164,6 @@ function Dashboard({ products = [], warehouses = [] }) {
       {/* RESULTS */}
       {optimization && (
         <section className="metrics-grid">
-
           <div className="metric-card">
             <h3>Current Stock</h3>
 
@@ -205,7 +232,6 @@ function Dashboard({ products = [], warehouses = [] }) {
             <span>units</span>
           </div>
 
-          {/* STATUS */}
           <div className="metric-card status-card">
             <h3>Inventory Status</h3>
 
@@ -214,11 +240,11 @@ function Dashboard({ products = [], warehouses = [] }) {
             </p>
 
             <span>
-              Lead time: {optimization.lead_time_days} days
+              Lead time:{" "}
+              {optimization.lead_time_days} days
             </span>
           </div>
 
-          {/* LEAD TIME DEMAND */}
           <div className="metric-card">
             <h3>Lead Time Demand</h3>
 
@@ -230,22 +256,22 @@ function Dashboard({ products = [], warehouses = [] }) {
 
             <span>units</span>
           </div>
-
         </section>
       )}
 
       {/* INITIAL STATE */}
-      {!optimization && !loading && !error && (
-        <div className="empty-state compact">
-          <h4>Ready to analyze</h4>
+      {!optimization &&
+        !loading &&
+        !error && (
+          <div className="empty-state compact">
+            <h4>Ready to analyze</h4>
 
-          <p>
-            Select a product and warehouse, then click
-            "Analyze Inventory".
-          </p>
-        </div>
-      )}
-
+            <p>
+              Select a product and warehouse, then click
+              "Analyze Inventory".
+            </p>
+          </div>
+        )}
     </div>
   );
 }
