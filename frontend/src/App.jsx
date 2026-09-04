@@ -47,10 +47,10 @@ function App() {
       quantity: "",
     });
 
-  const [formMessage, setFormMessage] =
-    useState("");
-  const [formError, setFormError] =
-    useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [formError, setFormError] = useState("");
+
+  // ---------------- API ----------------
 
   const fetchEndpoint = async (endpoint) => {
     try {
@@ -147,6 +147,8 @@ function App() {
     fetchData();
   }, []);
 
+  // ---------------- INPUT HANDLERS ----------------
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
 
@@ -174,6 +176,8 @@ function App() {
     }));
   };
 
+  // ---------------- API ERROR ----------------
+
   const getApiErrorMessage = async (
     response,
     defaultMessage
@@ -191,7 +195,7 @@ function App() {
         errorMessage = errorData.detail;
       }
     } catch {
-      // Keep default error message.
+      // Keep default message.
     }
 
     return errorMessage;
@@ -307,8 +311,7 @@ function App() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name:
-              warehouseFormData.name.trim(),
+            name: warehouseFormData.name.trim(),
             location:
               warehouseFormData.location.trim(),
           }),
@@ -514,6 +517,8 @@ function App() {
       Number(item.quantity || 0) <= 10
   );
 
+  // ---------------- NAVIGATION ----------------
+
   const handleNavigation = (section) => {
     setActiveSection(section);
 
@@ -537,8 +542,12 @@ function App() {
     }
   };
 
+  // ---------------- UI ----------------
+
   return (
     <div className="app-shell">
+      {/* SIDEBAR */}
+
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">
@@ -616,7 +625,11 @@ function App() {
         </div>
       </aside>
 
+      {/* MAIN */}
+
       <main className="main-content">
+        {/* TOPBAR */}
+
         <header
           className="topbar"
           id="dashboard"
@@ -645,6 +658,8 @@ function App() {
             </button>
           </div>
         </header>
+
+        {/* API ALERT */}
 
         {apiError && (
           <div className="api-alert">
@@ -1155,9 +1170,7 @@ function App() {
                 ATTENTION
               </span>
 
-              <h3>
-                Stock Alerts
-              </h3>
+              <h3>Stock Alerts</h3>
 
               <p>
                 Items that may need attention
@@ -1179,73 +1192,87 @@ function App() {
               </p>
             </div>
           ) : (
-            <div className="alert-list">
-              {lowStockItems.map((item) => {
-                const product =
-                  products.find(
-                    (entry) =>
-                      Number(entry.id) ===
-                      Number(
-                        item.product_id
-                      )
-                  );
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>PRODUCT</th>
+                    <th>WAREHOUSE</th>
+                    <th>CURRENT STOCK</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
 
-                const warehouse =
-                  warehouses.find(
-                    (entry) =>
-                      Number(entry.id) ===
-                      Number(
-                        item.warehouse_id
-                      )
-                  );
+                <tbody>
+                  {lowStockItems.map(
+                    (item) => {
+                      const product =
+                        products.find(
+                          (entry) =>
+                            Number(
+                              entry.id
+                            ) ===
+                            Number(
+                              item.product_id
+                            )
+                        );
 
-                return (
-                  <div
-                    className="stock-alert"
-                    key={item.id}
-                  >
-                    <div>
-                      <strong>
-                        {product?.name ||
-                          `Product #${item.product_id}`}
-                      </strong>
+                      const warehouse =
+                        warehouses.find(
+                          (entry) =>
+                            Number(
+                              entry.id
+                            ) ===
+                            Number(
+                              item.warehouse_id
+                            )
+                        );
 
-                      <span>
-                        SKU:{" "}
-                        {product?.sku || "—"}
-                      </span>
-                    </div>
+                      return (
+                        <tr
+                          key={item.id}
+                        >
+                          <td>
+                            <span className="table-primary">
+                              {product?.name ||
+                                `Product #${item.product_id}`}
+                            </span>
+                          </td>
 
-                    <div>
-                      <strong>
-                        {warehouse?.name ||
-                          `Warehouse #${item.warehouse_id}`}
-                      </strong>
+                          <td>
+                            <span className="table-primary">
+                              {warehouse?.name ||
+                                `Warehouse #${item.warehouse_id}`}
+                            </span>
+                          </td>
 
-                      <span>
-                        {warehouse?.location ||
-                          "Location unavailable"}
-                      </span>
-                    </div>
+                          <td>
+                            <span className="low-stock-value">
+                              {item.quantity}{" "}
+                              {Number(
+                                item.quantity
+                              ) === 1
+                                ? "unit"
+                                : "units"}
+                            </span>
+                          </td>
 
-                    <span className="low-stock-value">
-                      {item.quantity}{" "}
-                      {Number(
-                        item.quantity
-                      ) === 1
-                        ? "unit"
-                        : "units"}
-                    </span>
-
-                    <span className="category-badge">
-                      LOW STOCK
-                    </span>
-                  </div>
-                );
-              })}
+                          <td>
+                            <span className="category-badge">
+                              LOW STOCK
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
+
+        {/* FOOTER */}
 
         <footer className="page-footer">
           <span>
