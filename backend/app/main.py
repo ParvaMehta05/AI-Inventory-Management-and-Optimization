@@ -22,6 +22,8 @@ from app.routes.order import router as order_router
 from app.routes.webhooks import router as webhooks_router
 from app.routes.optimization import router as optimization_router
 
+from ml.generate_sales import generate_sales
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -94,6 +96,34 @@ def health():
     return {
         "status": "healthy"
     }
+
+
+# ---------------------------------------------------------
+# TEMPORARY SALES SEED
+# ---------------------------------------------------------
+
+@app.post("/seed-sales")
+def seed_sales():
+    """
+    Temporary endpoint used to generate historical sales data
+    for ML demand prediction.
+
+    Remove this endpoint after production data has been seeded.
+    """
+    try:
+        generate_sales()
+
+        return {
+            "success": True,
+            "message": "Historical sales generation completed."
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": "Historical sales generation failed.",
+            "error": str(error),
+        }
 
 
 # ---------------------------------------------------------
