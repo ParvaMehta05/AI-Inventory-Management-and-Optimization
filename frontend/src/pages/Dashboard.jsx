@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "../App.css";
 
 const API_URL = (
@@ -19,17 +19,8 @@ function Dashboard({
   const [error, setError] = useState("");
 
   /*
-   * Only inventory records with stock > 0 are considered
-   * available for AI optimization.
-   */
-  const availableInventory = useMemo(() => {
-    return inventory.filter(
-      (item) => Number(item.quantity || 0) > 0
-    );
-  }, [inventory]);
-
-  /*
-   * Warehouses available for the currently selected product.
+   * All inventory records are valid for selection.
+   * Quantity can be 0 and the record is still considered valid.
    */
   const availableWarehouses = useMemo(() => {
     if (!productId) {
@@ -37,7 +28,7 @@ function Dashboard({
     }
 
     const warehouseIds = new Set(
-      availableInventory
+      inventory
         .filter(
           (item) =>
             Number(item.product_id) === Number(productId)
@@ -48,14 +39,10 @@ function Dashboard({
     return warehouses.filter((warehouse) =>
       warehouseIds.has(Number(warehouse.id))
     );
-  }, [
-    productId,
-    warehouses,
-    availableInventory,
-  ]);
+  }, [productId, warehouses, inventory]);
 
   /*
-   * Products available in the currently selected warehouse.
+   * Products available in the selected warehouse.
    */
   const availableProducts = useMemo(() => {
     if (!warehouseId) {
@@ -63,7 +50,7 @@ function Dashboard({
     }
 
     const productIds = new Set(
-      availableInventory
+      inventory
         .filter(
           (item) =>
             Number(item.warehouse_id) === Number(warehouseId)
@@ -74,53 +61,14 @@ function Dashboard({
     return products.filter((product) =>
       productIds.has(Number(product.id))
     );
-  }, [
-    warehouseId,
-    products,
-    availableInventory,
-  ]);
+  }, [warehouseId, products, inventory]);
 
   /*
-   * Set a valid initial product.
-   */
-  useEffect(() => {
-    if (availableProducts.length === 0) {
-      setProductId("");
-      return;
-    }
-
-    const currentProductExists = availableProducts.some(
-      (product) =>
-        Number(product.id) === Number(productId)
-    );
-
-    if (!currentProductExists) {
-      setProductId(String(availableProducts[0].id));
-    }
-  }, [availableProducts, productId]);
-
-  /*
-   * Set a valid warehouse for the selected product.
-   */
-  useEffect(() => {
-    if (availableWarehouses.length === 0) {
-      setWarehouseId("");
-      return;
-    }
-
-    const currentWarehouseExists = availableWarehouses.some(
-      (warehouse) =>
-        Number(warehouse.id) === Number(warehouseId)
-    );
-
-    if (!currentWarehouseExists) {
-      setWarehouseId(String(availableWarehouses[0].id));
-    }
-  }, [availableWarehouses, warehouseId]);
-
-  /*
-   * When the user changes the product, clear old optimization
-   * results because they belong to the previous selection.
+   * Product selection.
+   *
+   * Do NOT automatically select another product or warehouse.
+   * If the current warehouse is not valid for the new product,
+   * simply clear the warehouse selection.
    */
   const handleProductChange = (event) => {
     const newProductId = event.target.value;
@@ -129,33 +77,28 @@ function Dashboard({
     setOptimization(null);
     setError("");
 
-    const matchingWarehouses = warehouses.filter((warehouse) =>
-      availableInventory.some(
-        (item) =>
-          Number(item.product_id) === Number(newProductId) &&
-          Number(item.warehouse_id) === Number(warehouse.id) &&
-          Number(item.quantity || 0) > 0
-      )
+    if (!newProductId) {
+      setWarehouseId("");
+      return;
+    }
+
+    const currentWarehouseIsValid = inventory.some(
+      (item) =>
+        Number(item.product_id) === Number(newProductId) &&
+        Number(item.warehouse_id) === Number(warehouseId)
     );
 
-    if (matchingWarehouses.length > 0) {
-      const currentWarehouseStillValid =
-        matchingWarehouses.some(
-          (warehouse) =>
-            Number(warehouse.id) === Number(warehouseId)
-        );
-
-      if (!currentWarehouseStillValid) {
-        setWarehouseId(String(matchingWarehouses[0].id));
-      }
-    } else {
+    if (warehouseId && !currentWarehouseIsValid) {
       setWarehouseId("");
     }
   };
 
   /*
-   * When the user changes the warehouse, only products
-   * available in that warehouse remain selectable.
+   * Warehouse selection.
+   *
+   * Do NOT automatically select another warehouse or product.
+   * If the current product is not valid for the new warehouse,
+   * simply clear the product selection.
    */
   const handleWarehouseChange = (event) => {
     const newWarehouseId = event.target.value;
@@ -164,30 +107,25 @@ function Dashboard({
     setOptimization(null);
     setError("");
 
-    const matchingProducts = products.filter((product) =>
-      availableInventory.some(
-        (item) =>
-          Number(item.warehouse_id) === Number(newWarehouseId) &&
-          Number(item.product_id) === Number(product.id) &&
-          Number(item.quantity || 0) > 0
-      )
+    if (!newWarehouseId) {
+      setProductId("");
+      return;
+    }
+
+    const currentProductIsValid = inventory.some(
+      (item) =>
+        Number(item.warehouse_id) === Number(newWarehouseId) &&
+        Number(item.product_id) === Number(productId)
     );
 
-    if (matchingProducts.length > 0) {
-      const currentProductStillValid =
-        matchingProducts.some(
-          (product) =>
-            Number(product.id) === Number(productId)
-        );
-
-      if (!currentProductStillValid) {
-        setProductId(String(matchingProducts[0].id));
-      }
-    } else {
+    if (productId && !currentProductIsValid) {
       setProductId("");
     }
   };
 
+  /*
+   * Analyze selected product + warehouse.
+   */
   const analyzeInventory = async () => {
     if (!productId || !warehouseId) {
       setError("Select a product and warehouse first.");
@@ -195,14 +133,13 @@ function Dashboard({
     }
 
     /*
-     * Extra frontend validation so an invalid combination
-     * cannot reach the optimization API.
+     * Validate that an inventory record exists.
+     * Quantity can be 0; the record is still valid.
      */
     const matchingInventory = inventory.find(
       (item) =>
         Number(item.product_id) === Number(productId) &&
-        Number(item.warehouse_id) === Number(warehouseId) &&
-        Number(item.quantity || 0) > 0
+        Number(item.warehouse_id) === Number(warehouseId)
     );
 
     if (!matchingInventory) {
@@ -231,6 +168,14 @@ function Dashboard({
       }
 
       setOptimization(data);
+
+      /*
+       * IMPORTANT:
+       * After successful analysis, clear both selections.
+       * This also ensures refresh/new analysis starts clean.
+       */
+      setProductId("");
+      setWarehouseId("");
     } catch (err) {
       console.error(
         "Inventory optimization error:",
@@ -281,18 +226,15 @@ function Dashboard({
             onChange={handleProductChange}
             disabled={products.length === 0}
           >
+            <option value="">
+              Select a product
+            </option>
+
             {products.length === 0 && (
               <option value="">
                 No products available
               </option>
             )}
-
-            {availableProducts.length === 0 &&
-              products.length > 0 && (
-                <option value="">
-                  No products available in this warehouse
-                </option>
-              )}
 
             {availableProducts.map((product) => (
               <option
@@ -319,18 +261,15 @@ function Dashboard({
             onChange={handleWarehouseChange}
             disabled={warehouses.length === 0}
           >
+            <option value="">
+              Select a warehouse
+            </option>
+
             {warehouses.length === 0 && (
               <option value="">
                 No warehouses available
               </option>
             )}
-
-            {availableWarehouses.length === 0 &&
-              warehouses.length > 0 && (
-                <option value="">
-                  No warehouse has this product in stock
-                </option>
-              )}
 
             {availableWarehouses.map((warehouse) => (
               <option
