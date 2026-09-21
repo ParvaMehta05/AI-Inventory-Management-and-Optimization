@@ -5,6 +5,7 @@ class InventoryCreate(BaseModel):
     product_id: int = Field(gt=0)
     warehouse_id: int = Field(gt=0)
     quantity: int = Field(ge=0)
+    reorder_level: int = Field(ge=0, default=0)
 
 
 class InventoryResponse(BaseModel):
@@ -12,6 +13,7 @@ class InventoryResponse(BaseModel):
     product_id: int
     warehouse_id: int
     quantity: int
+    reorder_level: int
 
     class Config:
         from_attributes = True
