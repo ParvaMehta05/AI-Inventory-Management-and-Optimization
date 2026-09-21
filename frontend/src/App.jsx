@@ -38,10 +38,18 @@ function App() {
     product_id: "",
     warehouse_id: "",
     quantity: "",
+    reorder_level: "",
   });
 
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [executingKey, setExecutingKey] = useState("");
+  const [redistributionMessage, setRedistributionMessage] = useState("");
+  const [redistributionError, setRedistributionError] = useState("");
 
   // =========================================================
   // API
@@ -127,8 +135,85 @@ function App() {
     setLoading(false);
   };
 
+  // =========================================================
+  // REDISTRIBUTION
+  // =========================================================
+
+  const fetchSuggestions = async () => {
+    setSuggestionsLoading(true);
+    setRedistributionError("");
+
+    const result = await fetchEndpoint("/redistribution/suggestions");
+
+    if (result.success) {
+      setSuggestions(result.data);
+    } else {
+      setRedistributionError(`Suggestions: ${result.error}`);
+    }
+
+    setSuggestionsLoading(false);
+  };
+
+  const fetchTransferHistory = async () => {
+    const result = await fetchEndpoint("/redistribution/transfers");
+
+    if (result.success) {
+      setTransfers(result.data);
+    }
+  };
+
+  const handleExecuteTransfer = async (suggestion) => {
+    const transferKey = `${suggestion.product_id}-${suggestion.from_warehouse_id}-${suggestion.to_warehouse_id}`;
+
+    setExecutingKey(transferKey);
+    setRedistributionMessage("");
+    setRedistributionError("");
+
+    try {
+      const response = await fetch(`${API_URL}/redistribution/execute`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: suggestion.product_id,
+          from_warehouse_id: suggestion.from_warehouse_id,
+          to_warehouse_id: suggestion.to_warehouse_id,
+          quantity: suggestion.quantity,
+          reason: "Automatic redistribution",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(response, "Unable to complete transfer.")
+        );
+      }
+
+      setRedistributionMessage(
+        `Moved ${suggestion.quantity} unit(s) of ${suggestion.product_sku} to ${suggestion.to_warehouse_name}.`
+      );
+
+      await Promise.all([
+        fetchData(),
+        fetchSuggestions(),
+        fetchTransferHistory(),
+      ]);
+    } catch (error) {
+      console.error("Execute transfer error:", error);
+
+      setRedistributionError(
+        error.message || "Unable to complete transfer. Please try again."
+      );
+    } finally {
+      setExecutingKey("");
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchSuggestions();
+    fetchTransferHistory();
   }, []);
 
   // =========================================================
@@ -368,6 +453,9 @@ function App() {
           quantity: Number(
             inventoryFormData.quantity
           ),
+          reorder_level: Number(
+            inventoryFormData.reorder_level || 0
+          ),
         }),
       });
 
@@ -386,6 +474,7 @@ function App() {
         product_id: "",
         warehouse_id: "",
         quantity: "",
+        reorder_level: "",
       });
 
       await fetchData();
@@ -441,6 +530,7 @@ function App() {
       product_id: "",
       warehouse_id: "",
       quantity: "",
+      reorder_level: "",
     });
 
     setFormMessage("");
@@ -496,6 +586,7 @@ function App() {
       Products: "products",
       Warehouses: "warehouses",
       Inventory: "inventory",
+      Redistribution: "redistribution",
       Optimization: "optimization",
     };
 
@@ -539,6 +630,7 @@ function App() {
             "Products",
             "Warehouses",
             "Inventory",
+            "Redistribution",
             "Optimization",
           ].map((item) => (
             <button
@@ -557,6 +649,7 @@ function App() {
                 {item === "Products" && "□"}
                 {item === "Warehouses" && "⌂"}
                 {item === "Inventory" && "≡"}
+                {item === "Redistribution" && "⇄"}
                 {item === "Optimization" && "✦"}
               </span>
 
@@ -1007,6 +1100,7 @@ function App() {
                     <th>PRODUCT</th>
                     <th>WAREHOUSE</th>
                     <th>QUANTITY</th>
+                    <th>REORDER LEVEL</th>
                   </tr>
                 </thead>
 
@@ -1089,12 +1183,218 @@ function App() {
                             {item.quantity}
                           </span>
                         </td>
+
+                        <td>
+                          <span className="muted-text">
+                            {item.reorder_level ?? 0}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
+          )}
+        </section>
+
+        {/* REDISTRIBUTION */}
+
+        <section
+          className="content-card"
+          id="redistribution"
+        >
+          <div className="section-header inventory-header">
+            <div>
+              <span className="section-kicker">
+                SMART REDISTRIBUTION
+              </span>
+
+              <h3>Redistribution</h3>
+
+              <p>
+                Recommended stock transfers between warehouses,
+                based on each warehouse's reorder level.
+              </p>
+            </div>
+
+            <div className="section-actions">
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  fetchSuggestions();
+                  fetchTransferHistory();
+                }}
+              >
+                ↻ Refresh
+              </button>
+            </div>
+          </div>
+
+          {redistributionError && (
+            <div className="form-message error">
+              {redistributionError}
+            </div>
+          )}
+
+          {redistributionMessage && (
+            <div className="form-message success">
+              {redistributionMessage}
+            </div>
+          )}
+
+          {suggestionsLoading ? (
+            <div className="empty-state compact">
+              <h4>Analyzing stock levels...</h4>
+
+              <p>
+                Comparing quantity against reorder level per
+                warehouse.
+              </p>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div className="empty-state compact">
+              <div className="empty-icon">⇄</div>
+
+              <h4>Inventory is balanced</h4>
+
+              <p>
+                No warehouse is currently below its reorder
+                level.
+              </p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="data-table inventory-table">
+                <thead>
+                  <tr>
+                    <th>PRODUCT</th>
+                    <th>FROM</th>
+                    <th>TO</th>
+                    <th>QTY</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {suggestions.map((suggestion) => {
+                    const key = `${suggestion.product_id}-${suggestion.from_warehouse_id}-${suggestion.to_warehouse_id}`;
+
+                    return (
+                      <tr key={key}>
+                        <td>
+                          <div className="table-cell-stack">
+                            <span className="table-primary">
+                              {suggestion.product_sku}
+                            </span>
+
+                            <span className="table-secondary">
+                              {suggestion.reason}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="table-primary">
+                            {suggestion.from_warehouse_name}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="table-primary">
+                            {suggestion.to_warehouse_name}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="quantity-badge">
+                            {suggestion.quantity}
+                          </span>
+                        </td>
+
+                        <td>
+                          <button
+                            className="secondary-button"
+                            disabled={executingKey === key}
+                            onClick={() =>
+                              handleExecuteTransfer(suggestion)
+                            }
+                          >
+                            {executingKey === key
+                              ? "Transferring..."
+                              : "Transfer"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {transfers.length > 0 && (
+            <>
+              <div className="section-header">
+                <div>
+                  <span className="section-kicker">HISTORY</span>
+                  <h3>Recent transfers</h3>
+                </div>
+              </div>
+
+              <div className="table-wrapper">
+                <table className="data-table inventory-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>PRODUCT</th>
+                      <th>FROM → TO</th>
+                      <th>QTY</th>
+                      <th>WHEN</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {transfers.slice(0, 10).map((transfer) => (
+                      <tr key={transfer.id}>
+                        <td>
+                          <span className="muted-text">
+                            #{transfer.id}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="muted-text">
+                            #{transfer.product_id}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="table-secondary">
+                            #{transfer.from_warehouse_id} → #
+                            {transfer.to_warehouse_id}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="quantity-badge">
+                            {transfer.quantity}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="muted-text">
+                            {new Date(
+                              transfer.created_at
+                            ).toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
 
@@ -1645,6 +1945,27 @@ function App() {
                       handleInventoryInputChange
                     }
                     placeholder="e.g. 100"
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label htmlFor="inventory-reorder-level">
+                    Reorder Level
+                  </label>
+
+                  <input
+                    id="inventory-reorder-level"
+                    name="reorder_level"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={
+                      inventoryFormData.reorder_level
+                    }
+                    onChange={
+                      handleInventoryInputChange
+                    }
+                    placeholder="e.g. 20"
                   />
                 </div>
               </div>
