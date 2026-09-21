@@ -12,6 +12,7 @@ from app.models.inventory import Inventory
 from app.models.order import Order
 from app.models.channel_order import ChannelOrder
 from app.models.sale import Sale
+from app.models.transfer import StockTransfer
 
 from app.routes.auth import router as auth_router
 from app.routes.products import router as product_router
@@ -20,7 +21,7 @@ from app.routes.inventory import router as inventory_router
 from app.routes.order import router as order_router
 from app.routes.webhooks import router as webhooks_router
 from app.routes.optimization import router as optimization_router
-
+from app.routes.redistribution import router as redistribution_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -73,6 +74,9 @@ app.include_router(webhooks_router)
 # ML demand forecasting / inventory optimization
 app.include_router(optimization_router)
 
+# Smart redistribution
+app.include_router(redistribution_router)
+
 
 # ---------------------------------------------------------
 # ROOT
@@ -94,6 +98,7 @@ def health():
     return {
         "status": "healthy"
     }
+
 
 # ---------------------------------------------------------
 # CURRENT USER
