@@ -43,6 +43,7 @@ function App() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [editingInventoryId, setEditingInventoryId] = useState(null);
 
   const [activeSection, setActiveSection] =
     useState("Dashboard");
@@ -587,41 +588,58 @@ function App() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/inventory/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            product_id: Number(
-              inventoryFormData.product_id
-            ),
-            warehouse_id: Number(
-              inventoryFormData.warehouse_id
-            ),
-            quantity: Number(
+      const isEditing = Boolean(editingInventoryId);
+
+      const response = isEditing
+        ? await fetch(
+            `${API_URL}/inventory/${editingInventoryId}?quantity=${Number(
               inventoryFormData.quantity
-            ),
-            reorder_level: Number(
+            )}&reorder_level=${Number(
               inventoryFormData.reorder_level || 0
-            ),
-          }),
-        }
-      );
+            )}`,
+            {
+              method: "PUT",
+            }
+          )
+        : await fetch(
+            `${API_URL}/inventory/`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                product_id: Number(
+                  inventoryFormData.product_id
+                ),
+                warehouse_id: Number(
+                  inventoryFormData.warehouse_id
+                ),
+                quantity: Number(
+                  inventoryFormData.quantity
+                ),
+                reorder_level: Number(
+                  inventoryFormData.reorder_level || 0
+                ),
+              }),
+            }
+          );
 
       if (!response.ok) {
         throw new Error(
           await getApiErrorMessage(
             response,
-            "Unable to add inventory."
+            isEditing
+              ? "Unable to update inventory."
+              : "Unable to add inventory."
           )
         );
       }
 
       setFormMessage(
-        "Inventory added successfully."
+        isEditing
+          ? "Inventory updated successfully."
+          : "Inventory added successfully."
       );
 
       setInventoryFormData({
@@ -630,6 +648,8 @@ function App() {
         quantity: "",
         reorder_level: "",
       });
+
+      setEditingInventoryId(null);
 
       await fetchData();
 
@@ -645,7 +665,7 @@ function App() {
 
       setFormError(
         error.message ||
-          "Unable to add inventory. Please try again."
+          "Unable to save inventory. Please try again."
       );
     }
   };
@@ -690,6 +710,8 @@ function App() {
       reorder_level: "",
     });
 
+    setEditingInventoryId(null);
+
     setFormMessage("");
     setFormError("");
   };
@@ -713,6 +735,26 @@ function App() {
   const openInventoryForm = () => {
     setFormMessage("");
     setFormError("");
+    setEditingInventoryId(null);
+    setInventoryFormData({
+      product_id: "",
+      warehouse_id: "",
+      quantity: "",
+      reorder_level: "",
+    });
+    setShowInventoryForm(true);
+  };
+
+  const openEditInventoryForm = (item) => {
+    setFormMessage("");
+    setFormError("");
+    setEditingInventoryId(item.id);
+    setInventoryFormData({
+      product_id: String(item.product_id),
+      warehouse_id: String(item.warehouse_id),
+      quantity: String(item.quantity),
+      reorder_level: String(item.reorder_level ?? 0),
+    });
     setShowInventoryForm(true);
   };
 
@@ -1269,6 +1311,7 @@ function App() {
                     <th>WAREHOUSE</th>
                     <th>QUANTITY</th>
                     <th>REORDER LEVEL</th>
+                    <th>ACTION</th>
                   </tr>
                 </thead>
 
@@ -1356,6 +1399,17 @@ function App() {
                           <span className="muted-text">
                             {item.reorder_level ?? 0}
                           </span>
+                        </td>
+
+                        <td>
+                          <button
+                            className="secondary-button"
+                            onClick={() =>
+                              openEditInventoryForm(item)
+                            }
+                          >
+                            Edit
+                          </button>
                         </td>
                       </tr>
                     );
@@ -2178,11 +2232,16 @@ function App() {
                   STOCK MANAGEMENT
                 </span>
 
-                <h3>Add Inventory</h3>
+                <h3>
+                  {editingInventoryId
+                    ? "Edit Inventory"
+                    : "Add Inventory"}
+                </h3>
 
                 <p>
-                  Assign stock to a product
-                  and warehouse.
+                  {editingInventoryId
+                    ? "Update the stock quantity and reorder level."
+                    : "Assign stock to a product and warehouse."}
                 </p>
               </div>
 
@@ -2215,6 +2274,7 @@ function App() {
                     onChange={
                       handleInventoryInputChange
                     }
+                    disabled={Boolean(editingInventoryId)}
                   >
                     <option value="">
                       Select a product
@@ -2253,6 +2313,7 @@ function App() {
                     onChange={
                       handleInventoryInputChange
                     }
+                    disabled={Boolean(editingInventoryId)}
                   >
                     <option value="">
                       Select a warehouse
@@ -2349,7 +2410,9 @@ function App() {
                   type="submit"
                   className="primary-button"
                 >
-                  Save Inventory
+                  {editingInventoryId
+                    ? "Update Inventory"
+                    : "Save Inventory"}
                 </button>
               </div>
             </form>
