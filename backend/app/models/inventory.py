@@ -32,7 +32,7 @@ class Inventory(Base):
     reorder_level: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
-        default=0,
+        default=0
     )
 
     __table_args__ = (

@@ -1,3 +1,4 @@
 .env
 __pycache__/
 *.pyc
+ml/models/demand_model.pkl

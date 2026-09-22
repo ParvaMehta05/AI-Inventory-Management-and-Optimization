@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -8,9 +9,32 @@ const API_URL = (
 ).replace(/\/$/, "");
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    Boolean(localStorage.getItem("access_token"))
+  );
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    setIsAuthenticated(false);
+  };
+
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [inventory, setInventory] = useState([]);
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [transfersLoading, setTransfersLoading] = useState(false);
+  const [executingKey, setExecutingKey] = useState("");
+  const [redistributionMessage, setRedistributionMessage] =
+    useState("");
+  const [redistributionError, setRedistributionError] =
+    useState("");
 
   const [loading, setLoading] = useState(true);
   const [backendConnected, setBackendConnected] = useState(false);
@@ -20,7 +44,8 @@ function App() {
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
 
-  const [activeSection, setActiveSection] = useState("Dashboard");
+  const [activeSection, setActiveSection] =
+    useState("Dashboard");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,10 +54,11 @@ function App() {
     price: "",
   });
 
-  const [warehouseFormData, setWarehouseFormData] = useState({
-    name: "",
-    location: "",
-  });
+  const [warehouseFormData, setWarehouseFormData] =
+    useState({
+      name: "",
+      location: "",
+    });
 
   const [inventoryFormData, setInventoryFormData] = useState({
     product_id: "",
@@ -44,20 +70,15 @@ function App() {
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
 
-  const [suggestions, setSuggestions] = useState([]);
-  const [transfers, setTransfers] = useState([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [executingKey, setExecutingKey] = useState("");
-  const [redistributionMessage, setRedistributionMessage] = useState("");
-  const [redistributionError, setRedistributionError] = useState("");
-
   // =========================================================
   // API
   // =========================================================
 
   const fetchEndpoint = async (endpoint) => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`);
+      const response = await fetch(
+        `${API_URL}${endpoint}`
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -72,7 +93,10 @@ function App() {
         data: Array.isArray(data) ? data : [],
       };
     } catch (error) {
-      console.error(`API error for ${endpoint}:`, error);
+      console.error(
+        `API error for ${endpoint}:`,
+        error
+      );
 
       return {
         success: false,
@@ -105,21 +129,27 @@ function App() {
       setProducts(productsResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Products: ${productsResult.error}`);
+      errors.push(
+        `Products: ${productsResult.error}`
+      );
     }
 
     if (warehousesResult.success) {
       setWarehouses(warehousesResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Warehouses: ${warehousesResult.error}`);
+      errors.push(
+        `Warehouses: ${warehousesResult.error}`
+      );
     }
 
     if (inventoryResult.success) {
       setInventory(inventoryResult.data);
       hasConnection = true;
     } else {
-      errors.push(`Inventory: ${inventoryResult.error}`);
+      errors.push(
+        `Inventory: ${inventoryResult.error}`
+      );
     }
 
     setBackendConnected(hasConnection);
@@ -136,62 +166,140 @@ function App() {
   };
 
   // =========================================================
-  // REDISTRIBUTION
+  // REDISTRIBUTION API
   // =========================================================
 
   const fetchSuggestions = async () => {
     setSuggestionsLoading(true);
     setRedistributionError("");
 
-    const result = await fetchEndpoint("/redistribution/suggestions");
+    try {
+      const response = await fetch(
+        `${API_URL}/redistribution/suggestions`
+      );
 
-    if (result.success) {
-      setSuggestions(result.data);
-    } else {
-      setRedistributionError(`Suggestions: ${result.error}`);
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(
+            response,
+            "Unable to load redistribution suggestions."
+          )
+        );
+      }
+
+      const data = await response.json();
+
+      setSuggestions(
+        Array.isArray(data) ? data : []
+      );
+    } catch (error) {
+      console.error(
+        "Redistribution suggestions error:",
+        error
+      );
+
+      setRedistributionError(
+        error.message ||
+          "Unable to load redistribution suggestions."
+      );
+    } finally {
+      setSuggestionsLoading(false);
     }
-
-    setSuggestionsLoading(false);
   };
 
   const fetchTransferHistory = async () => {
-    const result = await fetchEndpoint("/redistribution/transfers");
+    setTransfersLoading(true);
 
-    if (result.success) {
-      setTransfers(result.data);
+    try {
+      const response = await fetch(
+        `${API_URL}/redistribution/transfers`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          await getApiErrorMessage(
+            response,
+            "Unable to load transfer history."
+          )
+        );
+      }
+
+      const data = await response.json();
+
+      setTransfers(
+        Array.isArray(data) ? data : []
+      );
+    } catch (error) {
+      console.error(
+        "Transfer history error:",
+        error
+      );
+
+      setRedistributionError(
+        error.message ||
+          "Unable to load transfer history."
+      );
+    } finally {
+      setTransfersLoading(false);
     }
   };
 
-  const handleExecuteTransfer = async (suggestion) => {
-    const transferKey = `${suggestion.product_id}-${suggestion.from_warehouse_id}-${suggestion.to_warehouse_id}`;
+  const handleExecuteTransfer = async (
+    suggestion
+  ) => {
+    const executionKey = [
+      suggestion.product_id,
+      suggestion.from_warehouse_id,
+      suggestion.to_warehouse_id,
+      suggestion.quantity,
+    ].join("-");
 
-    setExecutingKey(transferKey);
+    setExecutingKey(executionKey);
     setRedistributionMessage("");
     setRedistributionError("");
 
     try {
-      const response = await fetch(`${API_URL}/redistribution/execute`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: suggestion.product_id,
-          from_warehouse_id: suggestion.from_warehouse_id,
-          to_warehouse_id: suggestion.to_warehouse_id,
-          quantity: suggestion.quantity,
-          reason: "Automatic redistribution",
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/redistribution/execute`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_id: Number(
+              suggestion.product_id
+            ),
+            from_warehouse_id: Number(
+              suggestion.from_warehouse_id
+            ),
+            to_warehouse_id: Number(
+              suggestion.to_warehouse_id
+            ),
+            quantity: Number(
+              suggestion.quantity
+            ),
+            reason:
+              suggestion.reason ||
+              "Automatic redistribution",
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
-          await getApiErrorMessage(response, "Unable to complete transfer.")
+          await getApiErrorMessage(
+            response,
+            "Unable to execute the stock transfer."
+          )
         );
       }
 
+      const data = await response.json();
+
       setRedistributionMessage(
-        `Moved ${suggestion.quantity} unit(s) of ${suggestion.product_sku} to ${suggestion.to_warehouse_name}.`
+        data.message ||
+          `Successfully transferred ${suggestion.quantity} units.`
       );
 
       await Promise.all([
@@ -200,10 +308,14 @@ function App() {
         fetchTransferHistory(),
       ]);
     } catch (error) {
-      console.error("Execute transfer error:", error);
+      console.error(
+        "Execute transfer error:",
+        error
+      );
 
       setRedistributionError(
-        error.message || "Unable to complete transfer. Please try again."
+        error.message ||
+          "Unable to execute the stock transfer."
       );
     } finally {
       setExecutingKey("");
@@ -215,6 +327,10 @@ function App() {
     fetchSuggestions();
     fetchTransferHistory();
   }, []);
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   // =========================================================
   // INPUT HANDLERS
@@ -229,7 +345,9 @@ function App() {
     }));
   };
 
-  const handleWarehouseInputChange = (event) => {
+  const handleWarehouseInputChange = (
+    event
+  ) => {
     const { name, value } = event.target;
 
     setWarehouseFormData((current) => ({
@@ -238,7 +356,9 @@ function App() {
     }));
   };
 
-  const handleInventoryInputChange = (event) => {
+  const handleInventoryInputChange = (
+    event
+  ) => {
     const { name, value } = event.target;
 
     setInventoryFormData((current) => ({
@@ -290,28 +410,35 @@ function App() {
       !formData.category.trim() ||
       !formData.price
     ) {
-      setFormError("Please fill in all product fields.");
+      setFormError(
+        "Please fill in all product fields."
+      );
       return;
     }
 
     if (Number(formData.price) < 0) {
-      setFormError("Price cannot be negative.");
+      setFormError(
+        "Price cannot be negative."
+      );
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/products/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          sku: formData.sku.trim(),
-          category: formData.category.trim(),
-          price: Number(formData.price),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/products/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            sku: formData.sku.trim(),
+            category: formData.category.trim(),
+            price: Number(formData.price),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -322,7 +449,9 @@ function App() {
         );
       }
 
-      setFormMessage("Product added successfully.");
+      setFormMessage(
+        "Product added successfully."
+      );
 
       setFormData({
         name: "",
@@ -338,7 +467,10 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add product error:", error);
+      console.error(
+        "Add product error:",
+        error
+      );
 
       setFormError(
         error.message ||
@@ -351,7 +483,9 @@ function App() {
   // WAREHOUSE
   // =========================================================
 
-  const handleAddWarehouse = async (event) => {
+  const handleAddWarehouse = async (
+    event
+  ) => {
     event.preventDefault();
 
     setFormMessage("");
@@ -368,16 +502,20 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/warehouses/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: warehouseFormData.name.trim(),
-          location: warehouseFormData.location.trim(),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/warehouses/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: warehouseFormData.name.trim(),
+            location:
+              warehouseFormData.location.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -388,7 +526,9 @@ function App() {
         );
       }
 
-      setFormMessage("Warehouse added successfully.");
+      setFormMessage(
+        "Warehouse added successfully."
+      );
 
       setWarehouseFormData({
         name: "",
@@ -402,7 +542,10 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add warehouse error:", error);
+      console.error(
+        "Add warehouse error:",
+        error
+      );
 
       setFormError(
         error.message ||
@@ -415,7 +558,9 @@ function App() {
   // INVENTORY
   // =========================================================
 
-  const handleAddInventory = async (event) => {
+  const handleAddInventory = async (
+    event
+  ) => {
     event.preventDefault();
 
     setFormMessage("");
@@ -432,32 +577,39 @@ function App() {
       return;
     }
 
-    if (Number(inventoryFormData.quantity) < 0) {
-      setFormError("Quantity cannot be negative.");
+    if (
+      Number(inventoryFormData.quantity) < 0
+    ) {
+      setFormError(
+        "Quantity cannot be negative."
+      );
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/inventory/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: Number(
-            inventoryFormData.product_id
-          ),
-          warehouse_id: Number(
-            inventoryFormData.warehouse_id
-          ),
-          quantity: Number(
-            inventoryFormData.quantity
-          ),
-          reorder_level: Number(
-            inventoryFormData.reorder_level || 0
-          ),
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/inventory/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_id: Number(
+              inventoryFormData.product_id
+            ),
+            warehouse_id: Number(
+              inventoryFormData.warehouse_id
+            ),
+            quantity: Number(
+              inventoryFormData.quantity
+            ),
+            reorder_level: Number(
+              inventoryFormData.reorder_level || 0
+            ),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -468,7 +620,9 @@ function App() {
         );
       }
 
-      setFormMessage("Inventory added successfully.");
+      setFormMessage(
+        "Inventory added successfully."
+      );
 
       setInventoryFormData({
         product_id: "",
@@ -484,7 +638,10 @@ function App() {
         setFormMessage("");
       }, 700);
     } catch (error) {
-      console.error("Add inventory error:", error);
+      console.error(
+        "Add inventory error:",
+        error
+      );
 
       setFormError(
         error.message ||
@@ -586,8 +743,8 @@ function App() {
       Products: "products",
       Warehouses: "warehouses",
       Inventory: "inventory",
-      Redistribution: "redistribution",
       Optimization: "optimization",
+      Redistribution: "redistribution",
     };
 
     const element = document.getElementById(
@@ -612,11 +769,15 @@ function App() {
 
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">AI</div>
+          <div className="brand-mark">
+            AI
+          </div>
 
           <div>
             <h1>Inventory</h1>
-            <span>Management System</span>
+            <span>
+              Management System
+            </span>
           </div>
         </div>
 
@@ -630,8 +791,8 @@ function App() {
             "Products",
             "Warehouses",
             "Inventory",
-            "Redistribution",
             "Optimization",
+            "Redistribution",
           ].map((item) => (
             <button
               key={item}
@@ -649,8 +810,8 @@ function App() {
                 {item === "Products" && "□"}
                 {item === "Warehouses" && "⌂"}
                 {item === "Inventory" && "≡"}
-                {item === "Redistribution" && "⇄"}
                 {item === "Optimization" && "✦"}
+                {item === "Redistribution" && "⇄"}
               </span>
 
               <span>{item}</span>
@@ -715,6 +876,13 @@ function App() {
               onClick={fetchData}
             >
               ↻ Refresh
+            </button>
+
+            <button
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              Logout
             </button>
           </div>
         </header>
@@ -1198,206 +1366,6 @@ function App() {
           )}
         </section>
 
-        {/* REDISTRIBUTION */}
-
-        <section
-          className="content-card"
-          id="redistribution"
-        >
-          <div className="section-header inventory-header">
-            <div>
-              <span className="section-kicker">
-                SMART REDISTRIBUTION
-              </span>
-
-              <h3>Redistribution</h3>
-
-              <p>
-                Recommended stock transfers between warehouses,
-                based on each warehouse's reorder level.
-              </p>
-            </div>
-
-            <div className="section-actions">
-              <button
-                className="secondary-button"
-                onClick={() => {
-                  fetchSuggestions();
-                  fetchTransferHistory();
-                }}
-              >
-                ↻ Refresh
-              </button>
-            </div>
-          </div>
-
-          {redistributionError && (
-            <div className="form-message error">
-              {redistributionError}
-            </div>
-          )}
-
-          {redistributionMessage && (
-            <div className="form-message success">
-              {redistributionMessage}
-            </div>
-          )}
-
-          {suggestionsLoading ? (
-            <div className="empty-state compact">
-              <h4>Analyzing stock levels...</h4>
-
-              <p>
-                Comparing quantity against reorder level per
-                warehouse.
-              </p>
-            </div>
-          ) : suggestions.length === 0 ? (
-            <div className="empty-state compact">
-              <div className="empty-icon">⇄</div>
-
-              <h4>Inventory is balanced</h4>
-
-              <p>
-                No warehouse is currently below its reorder
-                level.
-              </p>
-            </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="data-table inventory-table">
-                <thead>
-                  <tr>
-                    <th>PRODUCT</th>
-                    <th>FROM</th>
-                    <th>TO</th>
-                    <th>QTY</th>
-                    <th></th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {suggestions.map((suggestion) => {
-                    const key = `${suggestion.product_id}-${suggestion.from_warehouse_id}-${suggestion.to_warehouse_id}`;
-
-                    return (
-                      <tr key={key}>
-                        <td>
-                          <div className="table-cell-stack">
-                            <span className="table-primary">
-                              {suggestion.product_sku}
-                            </span>
-
-                            <span className="table-secondary">
-                              {suggestion.reason}
-                            </span>
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="table-primary">
-                            {suggestion.from_warehouse_name}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="table-primary">
-                            {suggestion.to_warehouse_name}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="quantity-badge">
-                            {suggestion.quantity}
-                          </span>
-                        </td>
-
-                        <td>
-                          <button
-                            className="secondary-button"
-                            disabled={executingKey === key}
-                            onClick={() =>
-                              handleExecuteTransfer(suggestion)
-                            }
-                          >
-                            {executingKey === key
-                              ? "Transferring..."
-                              : "Transfer"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {transfers.length > 0 && (
-            <>
-              <div className="section-header">
-                <div>
-                  <span className="section-kicker">HISTORY</span>
-                  <h3>Recent transfers</h3>
-                </div>
-              </div>
-
-              <div className="table-wrapper">
-                <table className="data-table inventory-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>PRODUCT</th>
-                      <th>FROM → TO</th>
-                      <th>QTY</th>
-                      <th>WHEN</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {transfers.slice(0, 10).map((transfer) => (
-                      <tr key={transfer.id}>
-                        <td>
-                          <span className="muted-text">
-                            #{transfer.id}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="muted-text">
-                            #{transfer.product_id}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="table-secondary">
-                            #{transfer.from_warehouse_id} → #
-                            {transfer.to_warehouse_id}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="quantity-badge">
-                            {transfer.quantity}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="muted-text">
-                            {new Date(
-                              transfer.created_at
-                            ).toLocaleString()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </section>
-
         {/* AI INVENTORY OPTIMIZATION */}
 
         <section
@@ -1409,6 +1377,390 @@ function App() {
             warehouses={warehouses}
             inventory={inventory}
           />
+        </section>
+
+        {/* REDISTRIBUTION */}
+
+        <section
+          className="content-card"
+          id="redistribution"
+        >
+          <div className="section-header">
+            <div>
+              <span className="section-kicker">
+                SMART STOCK
+              </span>
+
+              <h3>
+                Smart Redistribution
+              </h3>
+
+              <p>
+                Recommended stock transfers
+                between warehouses based on
+                current stock and reorder levels.
+              </p>
+            </div>
+
+            <div className="section-actions">
+              <button
+                className="secondary-button"
+                onClick={fetchSuggestions}
+                disabled={suggestionsLoading}
+              >
+                {suggestionsLoading
+                  ? "Loading..."
+                  : "↻ Refresh Suggestions"}
+              </button>
+
+              <button
+                className="secondary-button"
+                onClick={fetchTransferHistory}
+                disabled={transfersLoading}
+              >
+                {transfersLoading
+                  ? "Loading..."
+                  : "↻ Refresh History"}
+              </button>
+            </div>
+          </div>
+
+          {redistributionMessage && (
+            <div className="form-message success">
+              {redistributionMessage}
+            </div>
+          )}
+
+          {redistributionError && (
+            <div className="form-message error">
+              {redistributionError}
+            </div>
+          )}
+
+          {/* SUGGESTIONS */}
+
+          <div className="section-header">
+            <div>
+              <span className="section-kicker">
+                RECOMMENDATIONS
+              </span>
+
+              <h3>
+                Transfer Suggestions
+              </h3>
+
+              <p>
+                Review and execute suggested
+                stock movements.
+              </p>
+            </div>
+          </div>
+
+          {suggestionsLoading ? (
+            <div className="empty-state compact">
+              <h4>
+                Analysing inventory...
+              </h4>
+
+              <p>
+                Generating redistribution
+                suggestions.
+              </p>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div className="empty-state compact">
+              <div className="empty-icon">
+                ⇄
+              </div>
+
+              <h4>
+                No redistribution suggestions
+              </h4>
+
+              <p>
+                Current inventory does not
+                require a recommended transfer.
+              </p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>PRODUCT</th>
+                    <th>FROM</th>
+                    <th>TO</th>
+                    <th>QUANTITY</th>
+                    <th>REASON</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {suggestions.map(
+                    (suggestion, index) => {
+                      const executionKey = [
+                        suggestion.product_id,
+                        suggestion.from_warehouse_id,
+                        suggestion.to_warehouse_id,
+                        suggestion.quantity,
+                      ].join("-");
+
+                      const isExecuting =
+                        executingKey ===
+                        executionKey;
+
+                      const product =
+                        products.find(
+                          (item) =>
+                            Number(item.id) ===
+                            Number(
+                              suggestion.product_id
+                            )
+                        );
+
+                      return (
+                        <tr
+                          key={`${executionKey}-${index}`}
+                        >
+                          <td>
+                            <div className="table-cell-stack">
+                              <span className="table-primary">
+                                {product?.name ||
+                                  `Product #${suggestion.product_id}`}
+                              </span>
+
+                              <span className="table-secondary">
+                                {suggestion.product_sku ||
+                                  `SKU unavailable`}
+                              </span>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span className="table-primary">
+                              {
+                                suggestion.from_warehouse_name
+                              }
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-primary">
+                              {
+                                suggestion.to_warehouse_name
+                              }
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="quantity-badge">
+                              {suggestion.quantity}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-secondary">
+                              {suggestion.reason}
+                            </span>
+                          </td>
+
+                          <td>
+                            <button
+                              className="primary-button"
+                              onClick={() =>
+                                handleExecuteTransfer(
+                                  suggestion
+                                )
+                              }
+                              disabled={
+                                isExecuting
+                              }
+                            >
+                              {isExecuting
+                                ? "Executing..."
+                                : "Execute Transfer"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TRANSFER HISTORY */}
+
+          <div
+            className="section-header"
+            style={{
+              marginTop: "32px",
+            }}
+          >
+            <div>
+              <span className="section-kicker">
+                HISTORY
+              </span>
+
+              <h3>
+                Recent Transfers
+              </h3>
+
+              <p>
+                Previously executed stock
+                redistribution transfers.
+              </p>
+            </div>
+          </div>
+
+          {transfersLoading ? (
+            <div className="empty-state compact">
+              <h4>
+                Loading transfer history...
+              </h4>
+
+              <p>
+                Reading completed stock
+                transfers.
+              </p>
+            </div>
+          ) : transfers.length === 0 ? (
+            <div className="empty-state compact">
+              <h4>
+                No transfers yet
+              </h4>
+
+              <p>
+                Executed redistribution
+                transfers will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>PRODUCT</th>
+                    <th>FROM</th>
+                    <th>TO</th>
+                    <th>QUANTITY</th>
+                    <th>STATUS</th>
+                    <th>DATE</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {transfers.map(
+                    (transfer) => {
+                      const product =
+                        products.find(
+                          (item) =>
+                            Number(item.id) ===
+                            Number(
+                              transfer.product_id
+                            )
+                        );
+
+                      const fromWarehouse =
+                        warehouses.find(
+                          (item) =>
+                            Number(item.id) ===
+                            Number(
+                              transfer.from_warehouse_id
+                            )
+                        );
+
+                      const toWarehouse =
+                        warehouses.find(
+                          (item) =>
+                            Number(item.id) ===
+                            Number(
+                              transfer.to_warehouse_id
+                            )
+                        );
+
+                      let formattedDate =
+                        "—";
+
+                      if (
+                        transfer.created_at
+                      ) {
+                        const date =
+                          new Date(
+                            transfer.created_at
+                          );
+
+                        if (
+                          !Number.isNaN(
+                            date.getTime()
+                          )
+                        ) {
+                          formattedDate =
+                            date.toLocaleString();
+                        }
+                      }
+
+                      return (
+                        <tr
+                          key={transfer.id}
+                        >
+                          <td>
+                            <span className="muted-text">
+                              #
+                              {transfer.id}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-primary">
+                              {product?.name ||
+                                `Product #${transfer.product_id}`}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-primary">
+                              {fromWarehouse?.name ||
+                                `Warehouse #${transfer.from_warehouse_id}`}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-primary">
+                              {toWarehouse?.name ||
+                                `Warehouse #${transfer.to_warehouse_id}`}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="quantity-badge">
+                              {transfer.quantity}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="alert-status-badge">
+                              {transfer.status ||
+                                "COMPLETED"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="table-secondary">
+                              {formattedDate}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* STOCK ALERTS */}
