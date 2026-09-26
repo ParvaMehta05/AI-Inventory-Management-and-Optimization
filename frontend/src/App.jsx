@@ -203,7 +203,7 @@ function App() {
 
       setRedistributionError(
         error.message ||
-          "Unable to load redistribution suggestions."
+        "Unable to load redistribution suggestions."
       );
     } finally {
       setSuggestionsLoading(false);
@@ -240,7 +240,7 @@ function App() {
 
       setRedistributionError(
         error.message ||
-          "Unable to load transfer history."
+        "Unable to load transfer history."
       );
     } finally {
       setTransfersLoading(false);
@@ -302,7 +302,7 @@ function App() {
 
       setRedistributionMessage(
         data.message ||
-          `Successfully transferred ${suggestion.quantity} units.`
+        `Successfully transferred ${suggestion.quantity} units.`
       );
 
       await Promise.all([
@@ -318,17 +318,64 @@ function App() {
 
       setRedistributionError(
         error.message ||
-          "Unable to execute the stock transfer."
+        "Unable to execute the stock transfer."
       );
     } finally {
       setExecutingKey("");
     }
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchSuggestions();
-    fetchTransferHistory();
+useEffect(() => {
+  if (!isAuthenticated) {
+    return;
+  }
+
+  fetchData();
+  fetchSuggestions();
+  fetchTransferHistory();
+}, [isAuthenticated]);
+
+useEffect(() => {
+  const sectionIds = {
+    Dashboard: "dashboard",
+    Products: "products",
+    Warehouses: "warehouses",
+    Inventory: "inventory",
+    Optimization: "optimization",
+    Redistribution: "redistribution",
+  };
+
+
+    const sections = Object.entries(sectionIds)
+      .map(([name, id]) => ({
+        name,
+        element: document.getElementById(id),
+      }))
+      .filter((section) => section.element);
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 180;
+
+      let currentSection = "Dashboard";
+
+      sections.forEach(({ name, element }) => {
+        if (element.offsetTop <= scrollPosition) {
+          currentSection = name;
+        }
+      });
+
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
   if (!isAuthenticated) {
   return <Login onLogin={handleLogin} />;
@@ -476,7 +523,7 @@ function App() {
 
       setFormError(
         error.message ||
-          "Unable to add product. Please try again."
+        "Unable to add product. Please try again."
       );
     }
   };
@@ -551,7 +598,7 @@ function App() {
 
       setFormError(
         error.message ||
-          "Unable to add warehouse. Please try again."
+        "Unable to add warehouse. Please try again."
       );
     }
   };
@@ -656,7 +703,7 @@ function App() {
 
       setFormError(
         error.message ||
-          "Unable to add inventory. Please try again."
+        "Unable to add inventory. Please try again."
       );
     }
   };
@@ -808,11 +855,10 @@ function App() {
           ].map((item) => (
             <button
               key={item}
-              className={`nav-item ${
-                activeSection === item
+              className={`nav-item ${activeSection === item
                   ? "active"
                   : ""
-              }`}
+                }`}
               onClick={() =>
                 handleNavigation(item)
               }
@@ -834,11 +880,10 @@ function App() {
         <div className="connection-card">
           <div className="connection-row">
             <span
-              className={`connection-dot ${
-                backendConnected
+              className={`connection-dot ${backendConnected
                   ? "online"
                   : "offline"
-              }`}
+                }`}
             />
 
             <strong>
@@ -1362,7 +1407,7 @@ function App() {
                               )
                                 ? "low-stock"
                                 : ""
-                            }`}
+                              }`}
                           >
                             {item.quantity}
                           </span>
@@ -1893,412 +1938,424 @@ function App() {
         {/* FOOTER */}
 
         <footer className="page-footer">
-          <span>
-            AI Inventory Management
-          </span>
+          <div className="footer-left">
+            <span>© 2026 Inventory Management System</span>
+            <span>AI-Powered Inventory Optimization</span>
+          </div>
 
-          <span>
-            Inventory optimization dashboard
-          </span>
+          <div className="footer-contact">
+            <span>Contact:</span>
+
+            <a href="mailto:parva@example.com">
+              parvamehta05@gmail.com
+            </a>
+
+            <a href="mailto:team@example.com">
+              harshpatels0508@gmail.com
+            </a>
+
+            <a href="mailto:team@example.com">
+              kushpatel290@gmail.com
+            </a>
+          </div>
         </footer>
-      </main>
 
-      {/* =====================================================
+        {/* =====================================================
           ADD PRODUCT MODAL
           ===================================================== */}
 
-      {showProductForm && (
-        <div
-          className="modal-overlay"
-          onClick={closeProductForm}
-        >
+        {showProductForm && (
           <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            className="modal-overlay"
+            onClick={closeProductForm}
           >
-            <div className="modal-header">
-              <div>
-                <span className="section-kicker">
-                  PRODUCT CATALOG
-                </span>
-
-                <h3>Add Product</h3>
-
-                <p>
-                  Enter the basic details
-                  for a new product.
-                </p>
-              </div>
-
-              <button
-                className="modal-close"
-                onClick={closeProductForm}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleAddProduct}
+            <div
+              className="modal"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
-              <div className="form-grid">
-                <div className="form-group full">
-                  <label htmlFor="name">
-                    Product Name
-                  </label>
+              <div className="modal-header">
+                <div>
+                  <span className="section-kicker">
+                    PRODUCT CATALOG
+                  </span>
 
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={
-                      handleInputChange
-                    }
-                    placeholder="e.g. Wireless Mouse"
-                    autoFocus
-                  />
+                  <h3>Add Product</h3>
+
+                  <p>
+                    Enter the basic details
+                    for a new product.
+                  </p>
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="sku">
-                    SKU
-                  </label>
-
-                  <input
-                    id="sku"
-                    name="sku"
-                    type="text"
-                    value={formData.sku}
-                    onChange={
-                      handleInputChange
-                    }
-                    placeholder="e.g. MOU001"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="category">
-                    Category
-                  </label>
-
-                  <input
-                    id="category"
-                    name="category"
-                    type="text"
-                    value={
-                      formData.category
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                    placeholder="e.g. Electronics"
-                  />
-                </div>
-
-                <div className="form-group full">
-                  <label htmlFor="price">
-                    Price
-                  </label>
-
-                  <input
-                    id="price"
-                    name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={
-                      handleInputChange
-                    }
-                    placeholder="e.g. 25.99"
-                  />
-                </div>
-              </div>
-
-              {formError && (
-                <div className="form-message error">
-                  {formError}
-                </div>
-              )}
-
-              {formMessage && (
-                <div className="form-message success">
-                  {formMessage}
-                </div>
-              )}
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={
-                    closeProductForm
-                  }
-                >
-                  Cancel
-                </button>
 
                 <button
-                  type="submit"
-                  className="primary-button"
+                  className="modal-close"
+                  onClick={closeProductForm}
+                  aria-label="Close"
                 >
-                  Save Product
+                  ×
                 </button>
               </div>
-            </form>
+
+              <form
+                onSubmit={handleAddProduct}
+              >
+                <div className="form-grid">
+                  <div className="form-group full">
+                    <label htmlFor="name">
+                      Product Name
+                    </label>
+
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={
+                        handleInputChange
+                      }
+                      placeholder="e.g. Wireless Mouse"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="sku">
+                      SKU
+                    </label>
+
+                    <input
+                      id="sku"
+                      name="sku"
+                      type="text"
+                      value={formData.sku}
+                      onChange={
+                        handleInputChange
+                      }
+                      placeholder="e.g. MOU001"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="category">
+                      Category
+                    </label>
+
+                    <input
+                      id="category"
+                      name="category"
+                      type="text"
+                      value={
+                        formData.category
+                      }
+                      onChange={
+                        handleInputChange
+                      }
+                      placeholder="e.g. Electronics"
+                    />
+                  </div>
+
+                  <div className="form-group full">
+                    <label htmlFor="price">
+                      Price
+                    </label>
+
+                    <input
+                      id="price"
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={
+                        handleInputChange
+                      }
+                      placeholder="e.g. 25.99"
+                    />
+                  </div>
+                </div>
+
+                {formError && (
+                  <div className="form-message error">
+                    {formError}
+                  </div>
+                )}
+
+                {formMessage && (
+                  <div className="form-message success">
+                    {formMessage}
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={
+                      closeProductForm
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                  >
+                    Save Product
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* =====================================================
+        {/* =====================================================
           ADD WAREHOUSE MODAL
           ===================================================== */}
 
-      {showWarehouseForm && (
-        <div
-          className="modal-overlay"
-          onClick={closeWarehouseForm}
-        >
+        {showWarehouseForm && (
           <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            className="modal-overlay"
+            onClick={closeWarehouseForm}
           >
-            <div className="modal-header">
-              <div>
-                <span className="section-kicker">
-                  STORAGE LOCATIONS
-                </span>
-
-                <h3>Add Warehouse</h3>
-
-                <p>
-                  Add a new warehouse or
-                  storage location.
-                </p>
-              </div>
-
-              <button
-                className="modal-close"
-                onClick={
-                  closeWarehouseForm
-                }
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleAddWarehouse}
+            <div
+              className="modal"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
-              <div className="form-grid">
-                <div className="form-group full">
-                  <label htmlFor="warehouse-name">
-                    Warehouse Name
-                  </label>
+              <div className="modal-header">
+                <div>
+                  <span className="section-kicker">
+                    STORAGE LOCATIONS
+                  </span>
 
-                  <input
-                    id="warehouse-name"
-                    name="name"
-                    type="text"
-                    value={
-                      warehouseFormData.name
-                    }
-                    onChange={
-                      handleWarehouseInputChange
-                    }
-                    placeholder="e.g. Main Warehouse"
-                    autoFocus
-                  />
+                  <h3>Add Warehouse</h3>
+
+                  <p>
+                    Add a new warehouse or
+                    storage location.
+                  </p>
                 </div>
 
-                <div className="form-group full">
-                  <label htmlFor="warehouse-location">
-                    Location
-                  </label>
-
-                  <input
-                    id="warehouse-location"
-                    name="location"
-                    type="text"
-                    value={
-                      warehouseFormData.location
-                    }
-                    onChange={
-                      handleWarehouseInputChange
-                    }
-                    placeholder="e.g. New York"
-                  />
-                </div>
-              </div>
-
-              {formError && (
-                <div className="form-message error">
-                  {formError}
-                </div>
-              )}
-
-              {formMessage && (
-                <div className="form-message success">
-                  {formMessage}
-                </div>
-              )}
-
-              <div className="modal-actions">
                 <button
-                  type="button"
-                  className="secondary-button"
+                  className="modal-close"
                   onClick={
                     closeWarehouseForm
                   }
+                  aria-label="Close"
                 >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                >
-                  Save Warehouse
+                  ×
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* =====================================================
+              <form
+                onSubmit={handleAddWarehouse}
+              >
+                <div className="form-grid">
+                  <div className="form-group full">
+                    <label htmlFor="warehouse-name">
+                      Warehouse Name
+                    </label>
+
+                    <input
+                      id="warehouse-name"
+                      name="name"
+                      type="text"
+                      value={
+                        warehouseFormData.name
+                      }
+                      onChange={
+                        handleWarehouseInputChange
+                      }
+                      placeholder="e.g. Main Warehouse"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="form-group full">
+                    <label htmlFor="warehouse-location">
+                      Location
+                    </label>
+
+                    <input
+                      id="warehouse-location"
+                      name="location"
+                      type="text"
+                      value={
+                        warehouseFormData.location
+                      }
+                      onChange={
+                        handleWarehouseInputChange
+                      }
+                      placeholder="e.g. New York"
+                    />
+                  </div>
+                </div>
+
+                {formError && (
+                  <div className="form-message error">
+                    {formError}
+                  </div>
+                )}
+
+                {formMessage && (
+                  <div className="form-message success">
+                    {formMessage}
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={
+                      closeWarehouseForm
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                  >
+                    Save Warehouse
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================
           ADD INVENTORY MODAL
           ===================================================== */}
 
-      {showInventoryForm && (
-        <div
-          className="modal-overlay"
-          onClick={closeInventoryForm}
-        >
+        {showInventoryForm && (
           <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            className="modal-overlay"
+            onClick={closeInventoryForm}
           >
-            <div className="modal-header">
-              <div>
-                <span className="section-kicker">
-                  STOCK MANAGEMENT
-                </span>
+            <div
+              className="modal"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <div className="modal-header">
+                <div>
+                  <span className="section-kicker">
+                    STOCK MANAGEMENT
+                  </span>
 
-                <h3>Add Inventory</h3>
+                  <h3>Add Inventory</h3>
 
-                <p>
-                  Assign stock to a product
-                  and warehouse.
-                </p>
+                  <p>
+                    Assign stock to a product
+                    and warehouse.
+                  </p>
+                </div>
+
+                <button
+                  className="modal-close"
+                  onClick={
+                    closeInventoryForm
+                  }
+                  aria-label="Close"
+                >
+                  ×
+                </button>
               </div>
 
-              <button
-                className="modal-close"
-                onClick={
-                  closeInventoryForm
-                }
-                aria-label="Close"
+              <form
+                onSubmit={handleAddInventory}
               >
-                ×
-              </button>
-            </div>
+                <div className="form-grid">
+                  <div className="form-group full">
+                    <label htmlFor="inventory-product">
+                      Product
+                    </label>
 
-            <form
-              onSubmit={handleAddInventory}
-            >
-              <div className="form-grid">
-                <div className="form-group full">
-                  <label htmlFor="inventory-product">
-                    Product
-                  </label>
+                    <select
+                      id="inventory-product"
+                      name="product_id"
+                      value={
+                        inventoryFormData.product_id
+                      }
+                      onChange={
+                        handleInventoryInputChange
+                      }
+                    >
+                      <option value="">
+                        Select a product
+                      </option>
 
-                  <select
-                    id="inventory-product"
-                    name="product_id"
-                    value={
-                      inventoryFormData.product_id
-                    }
-                    onChange={
-                      handleInventoryInputChange
-                    }
-                  >
-                    <option value="">
-                      Select a product
-                    </option>
+                      {products.map(
+                        (product) => (
+                          <option
+                            key={product.id}
+                            value={
+                              product.id
+                            }
+                          >
+                            #{product.id} —{" "}
+                            {product.name}
+                            {product.sku
+                              ? ` — ${product.sku}`
+                              : ""}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
 
-                    {products.map(
-                      (product) => (
-                        <option
-                          key={product.id}
-                          value={
-                            product.id
-                          }
-                        >
-                          #{product.id} —{" "}
-                          {product.name}
-                          {product.sku
-                            ? ` — ${product.sku}`
-                            : ""}
-                        </option>
-                      )
-                    )}
-                  </select>
-                </div>
+                  <div className="form-group full">
+                    <label htmlFor="inventory-warehouse">
+                      Warehouse
+                    </label>
 
-                <div className="form-group full">
-                  <label htmlFor="inventory-warehouse">
-                    Warehouse
-                  </label>
+                    <select
+                      id="inventory-warehouse"
+                      name="warehouse_id"
+                      value={
+                        inventoryFormData.warehouse_id
+                      }
+                      onChange={
+                        handleInventoryInputChange
+                      }
+                    >
+                      <option value="">
+                        Select a warehouse
+                      </option>
 
-                  <select
-                    id="inventory-warehouse"
-                    name="warehouse_id"
-                    value={
-                      inventoryFormData.warehouse_id
-                    }
-                    onChange={
-                      handleInventoryInputChange
-                    }
-                  >
-                    <option value="">
-                      Select a warehouse
-                    </option>
+                      {warehouses.map(
+                        (warehouse) => (
+                          <option
+                            key={
+                              warehouse.id
+                            }
+                            value={
+                              warehouse.id
+                            }
+                          >
+                            #{warehouse.id} —{" "}
+                            {warehouse.name}
+                            {warehouse.location
+                              ? ` — ${warehouse.location}`
+                              : ""}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
 
-                    {warehouses.map(
-                      (warehouse) => (
-                        <option
-                          key={
-                            warehouse.id
-                          }
-                          value={
-                            warehouse.id
-                          }
-                        >
-                          #{warehouse.id} —{" "}
-                          {warehouse.name}
-                          {warehouse.location
-                            ? ` — ${warehouse.location}`
-                            : ""}
-                        </option>
-                      )
-                    )}
-                  </select>
-                </div>
-
-                <div className="form-group full">
-                  <label htmlFor="inventory-quantity">
-                    Quantity
-                  </label>
+                  <div className="form-group full">
+                    <label htmlFor="inventory-quantity">
+                      Quantity
+                    </label>
 
                   <input
                     id="inventory-quantity"
@@ -2338,40 +2395,41 @@ function App() {
                 </div>
               </div>
 
-              {formError && (
-                <div className="form-message error">
-                  {formError}
+                {formError && (
+                  <div className="form-message error">
+                    {formError}
+                  </div>
+                )}
+
+                {formMessage && (
+                  <div className="form-message success">
+                    {formMessage}
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={
+                      closeInventoryForm
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                  >
+                    Save Inventory
+                  </button>
                 </div>
-              )}
-
-              {formMessage && (
-                <div className="form-message success">
-                  {formMessage}
-                </div>
-              )}
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={
-                    closeInventoryForm
-                  }
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                >
-                  Save Inventory
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+    </main>
     </div>
   );
 }
